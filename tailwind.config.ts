@@ -47,6 +47,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        'rpg-burgundy': 'hsl(348 73% 35%)',
+        'rpg-gold': 'hsl(43 96% 56%)',
+        'rpg-emerald': 'hsl(160 84% 39%)',
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

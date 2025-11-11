@@ -74,6 +74,51 @@ export type Database = {
         }
         Relationships: []
       }
+      players: {
+        Row: {
+          ac: number | null
+          attributes: Json
+          character_class: string | null
+          created_at: string
+          hp_current: number | null
+          hp_max: number | null
+          id: string
+          level: number | null
+          name: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ac?: number | null
+          attributes?: Json
+          character_class?: string | null
+          created_at?: string
+          hp_current?: number | null
+          hp_max?: number | null
+          id?: string
+          level?: number | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ac?: number | null
+          attributes?: Json
+          character_class?: string | null
+          created_at?: string
+          hp_current?: number | null
+          hp_max?: number | null
+          id?: string
+          level?: number | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
