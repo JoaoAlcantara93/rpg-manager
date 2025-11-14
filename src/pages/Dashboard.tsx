@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [campaignNotes, setCampaignNotes] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const [lastRoll, setLastRoll] = useState<{ dice: string; result: number } | null>(null);
 
   useEffect(() => {
     const checkAuthAndLoadNotes = async () => {
@@ -86,6 +87,27 @@ const Dashboard = () => {
     }
   };
 
+  const rollDice = (dice: string) => {
+    let result = 0;
+    
+    if (dice === '1d20') {
+      result = Math.floor(Math.random() * 20) + 1;
+    } else if (dice === '2d6') {
+      result = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1;
+    } else if (dice === '3d8') {
+      result = Math.floor(Math.random() * 8) + 1 + Math.floor(Math.random() * 8) + 1 + Math.floor(Math.random() * 8) + 1;
+    } else if (dice === '1d100') {
+      result = Math.floor(Math.random() * 100) + 1;
+    } else if (dice === '1d4') {
+      result = Math.floor(Math.random() * 4) + 1;
+    } else if (dice === '1d12') {
+      result = Math.floor(Math.random() * 12) + 1;
+    }
+    
+    setLastRoll({ dice, result });
+    toast.success(`🎲 ${dice}: ${result}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -98,7 +120,6 @@ const Dashboard = () => {
   }
 
   const menuItems = [
-    
     {
       title: "NPCs",
       description: "Gerencie seus NPCs",
@@ -112,7 +133,8 @@ const Dashboard = () => {
       icon: Shield,
       path: "/players",
       gradient: "from-accent to-primary",
-    },{
+    },
+    {
       title: "Rolagem de Dados",
       description: "Role dados de RPG",
       icon: Dices,
@@ -130,7 +152,8 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Grid Principal */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Coluna principal com os cards */}
           <div className="lg:col-span-2">
@@ -200,6 +223,60 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+
+        {/* Card de Rolagem Rápida */}
+        <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Dices className="w-5 h-5" />
+              <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                Rolagem Rápida
+              </span>
+            </CardTitle>
+            <CardDescription>
+              Role dados rapidamente durante a sessão
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              {/* Botões de Dados */}
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                {[
+                  { dice: '1d20', label: '1d20' },
+                  { dice: '2d6', label: '2d6' },
+                  { dice: '3d8', label: '3d8' },
+                  { dice: '1d100', label: '1d100' },
+                  { dice: '1d4', label: '1d4' },
+                  { dice: '1d12', label: '1d12' },
+                ].map(({ dice, label }) => (
+                  <Button
+                    key={dice}
+                    onClick={() => rollDice(dice)}
+                    variant="outline"
+                    className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 min-w-[60px]"
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Resultado */}
+              <div className="flex items-center gap-3 min-w-[140px] justify-center sm:justify-end">
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground">Última rolagem</div>
+                  {lastRoll ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
+                      <span className="text-xl font-bold text-primary">{lastRoll.result}</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">--</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
