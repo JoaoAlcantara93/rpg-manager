@@ -5,7 +5,7 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
-
+/*
 @layer base {
   :root {
     --background: 222 47% 11%;
@@ -96,6 +96,76 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}*/
+@layer base {
+  :root {
+    /* Cores inspiradas no Martim-Pescador */
+    --background: 202 32% 15%;    /* Azul escuro das penas */
+    --foreground: 36 100% 97%;    /* Branco creme do peito */
+
+    --card: 202 32% 18%;         /* Azul um pouco mais claro */
+    --card-foreground: 36 100% 97%;
+
+    --popover: 202 32% 18%;
+    --popover-foreground: 36 100% 97%;
+
+    --primary: 202 80% 45%;      /* Azul vibrante das costas */
+    --primary-foreground: 36 100% 97%;
+
+    --secondary: 43 96% 56%;     /* Laranja do bico */
+    --secondary-foreground: 202 32% 15%;
+
+    --muted: 202 25% 22%;
+    --muted-foreground: 36 50% 75%;
+
+    --accent: 170 70% 45%;       /* Verde-azulado das penas */
+    --accent-foreground: 36 100% 97%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 36 100% 97%;
+
+    --border: 202 25% 25%;
+    --input: 202 25% 22%;
+    --ring: 202 80% 45%;
+
+    --radius: 0.75rem;
+    
+    /* Gradientes atualizados */
+    --gradient-primary: linear-gradient(135deg, hsl(202 80% 45%), hsl(202 80% 55%));
+    --gradient-card: linear-gradient(145deg, hsl(202 32% 18%), hsl(202 32% 15%));
+    --shadow-glow: 0 0 30px hsl(202 80% 45% / 0.3);
+    --shadow-card: 0 4px 20px hsl(202 32% 10% / 0.5);
+  }
+
+  .dark {
+    --background: 202 32% 12%;    /* Azul mais escuro à noite */
+    --foreground: 36 100% 97%;
+
+    --card: 202 32% 15%;
+    --card-foreground: 36 100% 97%;
+
+    --popover: 202 32% 15%;
+    --popover-foreground: 36 100% 97%;
+
+    --primary: 202 80% 50%;      /* Azul mais vibrante no escuro */
+    --primary-foreground: 36 100% 97%;
+
+    --secondary: 43 96% 60%;     /* Laranja mais intenso */
+    --secondary-foreground: 202 32% 12%;
+
+    --muted: 202 25% 20%;
+    --muted-foreground: 36 50% 75%;
+
+    --accent: 170 70% 50%;       /* Verde mais vibrante */
+    --accent-foreground: 36 100% 97%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 36 100% 97%;
+
+    --border: 202 25% 22%;
+    --input: 202 25% 20%;
+    --ring: 202 80% 50%;
   }
 }
 

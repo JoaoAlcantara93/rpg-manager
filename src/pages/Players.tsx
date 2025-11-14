@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Swords } from "lucide-react";
+import { Plus, Pencil, Trash2, Swords, ArrowLeft } from "lucide-react";
 
 interface Player {
   id: string;
@@ -45,11 +45,7 @@ const Players = () => {
   }, []);
 
   const checkAuthAndFetch = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
+   
     fetchPlayers();
   };
 
@@ -145,6 +141,10 @@ const Players = () => {
     setEditingPlayer(null);
   };
 
+  const handleBackToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -159,11 +159,21 @@ const Players = () => {
     <Layout>
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Players
-            </h2>
-            <p className="text-muted-foreground">Gerencie os personagens dos jogadores</p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleBackToDashboard}
+              className="border-2 border-border hover:bg-accent/20"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                Players
+              </h2>
+              <p className="text-muted-foreground">Gerencie os personagens dos jogadores</p>
+            </div>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => {
             setDialogOpen(open);
