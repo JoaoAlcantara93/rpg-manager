@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Swords, ArrowLeft } from "lucide-react";
+import { Dices, Plus, Pencil, Trash2, Swords, ArrowLeft } from "lucide-react";
 
 interface Player {
   id: string;
@@ -147,11 +147,12 @@ const Players = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="text-center py-12">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Dices className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
           <p className="text-muted-foreground">Carregando...</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
