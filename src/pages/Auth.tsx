@@ -20,11 +20,26 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        redirectAfterLogin();
       }
     };
     checkUser();
   }, [navigate]);
+
+  // Função para redirecionar após login
+  const redirectAfterLogin = () => {
+    // Verificar se já tem campanhas
+    const savedCampaigns = localStorage.getItem('rpg-campaigns');
+    const campaigns = savedCampaigns ? JSON.parse(savedCampaigns) : [];
+    
+    if (campaigns.length === 0) {
+      navigate("/campaigns/new"); // Vai direto criar primeira campanha
+      toast.info("Vamos criar sua primeira campanha!");
+    } else {
+      navigate("/campaign-select"); // Vai para seleção de campanha
+      toast.success("Login realizado com sucesso!");
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +53,13 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Login realizado com sucesso!");
-        navigate("/dashboard");
+        redirectAfterLogin(); // Agora vai para campaign-select
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: {
               username,
             },
@@ -52,6 +67,14 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu email.");
+        // Para cadastro, vamos fazer login automático
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (!loginError && loginData.user) {
+          redirectAfterLogin();
+        }
       }
     } catch (error: any) {
       toast.error(error.message || "Erro na autenticação");

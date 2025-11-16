@@ -1,3 +1,4 @@
+// src/App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,10 +7,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Dice from "./pages/Dice";
-import NPCs from "./pages/NPCs";
+import NPCs from "./pages/NPCs"; // Note: importando de "Npcs" (com N maiúsculo)
 import Players from "./pages/Players";
-import Initiative from "./pages/Initiative";
+import Initiative from "./pages/Initiative"; // Note: importando de "Iniciative"
 import NotFound from "./pages/NotFound";
+import CampaignSelect from "./pages/CampaignSelect"; // NOVO
+import CampaignForm from "./pages/CampaignForm"; // NOVO
 
 const queryClient = new QueryClient();
 
@@ -20,14 +23,25 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/auth" replace />} />
+          {/* Rota raiz */}
+          <Route path="/" element={<Navigate to="/campaign-select" replace />} />
+          
+          {/* Autenticação */}
           <Route path="/auth" element={<Auth />} />
+          
+          {/* Fluxo de Campanhas */}
+          <Route path="/campaign-select" element={<CampaignSelect />} />
+          <Route path="/campaigns/new" element={<CampaignForm />} />
+          <Route path="/campaigns/edit/:id" element={<CampaignForm />} />
+          
+          {/* Funcionalidades principais */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dice" element={<Dice />} />
           <Route path="/npcs" element={<NPCs />} />
           <Route path="/players" element={<Players />} />
           <Route path="/initiative" element={<Initiative />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          
+          {/* Rota catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

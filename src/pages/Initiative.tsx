@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Heart, Shield, Search, ArrowLeft, X } from "lucide-react";
+import { Dices, Plus, Trash2, Heart, Shield, Search, ArrowLeft, X } from "lucide-react";
 
 interface InitiativeCharacter {
   id: string;
@@ -307,8 +307,11 @@ const Initiative = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Carregando...</p>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <Dices className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
         </div>
       </Layout>
     );

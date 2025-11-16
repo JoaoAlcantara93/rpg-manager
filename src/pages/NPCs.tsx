@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users } from "lucide-react";
 import Layout from "@/components/Layout"; // IMPORTE O LAYOUT
 
 const NPCs = () => {
@@ -184,8 +184,11 @@ const NPCs = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Carregando...</p>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <Dices className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
         </div>
       </Layout>
     );
