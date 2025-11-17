@@ -358,12 +358,6 @@ const NPCs = () => {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={debugDatabase}
-              className="px-4 py-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors text-sm"
-            >
-              Debug
-            </button>
-            <button
               onClick={() => setDialogOpen(true)}
               className="px-6 py-3 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center"
             >
@@ -422,7 +416,7 @@ const NPCs = () => {
                   
                   <div className="space-y-3 text-sm">
                     {/* Status Básicos */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">HP:</span>
                         <span className="text-foreground">{npc.current_hp || 0}/{npc.max_hp || 0}</span>
@@ -430,6 +424,10 @@ const NPCs = () => {
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">CA:</span>
                         <span className="text-foreground">{npc.armor_class || 10}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">Per:</span>
+                        <span className="text-foreground">{npc.perception || 0}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">Fort:</span>
@@ -442,11 +440,7 @@ const NPCs = () => {
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">Von:</span>
                         <span className="text-foreground">{npc.will_save || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Per:</span>
-                        <span className="text-foreground">{npc.perception || 0}</span>
-                      </div>
+                      </div>                      
                     </div>
 
                     {/* Observações */}
