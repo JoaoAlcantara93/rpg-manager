@@ -9,15 +9,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dices, Users, Swords, ListOrdered, Save, Shield, BookOpen, Settings } from "lucide-react";
 import { toast } from "sonner";
 
-// Interface da Campanha
+// Interface da Campanha compatível com Supabase
 interface Campaign {
   id: string;
   name: string;
   system: string;
   description: string;
-  created: string;
-  lastPlayed: string;
-  characterCount: number;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  user_id: string;
 }
 
 const Dashboard = () => {
@@ -29,7 +30,12 @@ const Dashboard = () => {
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
-    const checkAuthAndLoadNotes = async () => {
+    console.log("🏠 Dashboard montado");
+    checkAuthAndLoadData();
+  }, [navigate]);
+
+  const checkAuthAndLoadData = async () => {
+    try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
@@ -38,49 +44,74 @@ const Dashboard = () => {
       
       // Verificar se tem campanha selecionada
       const currentCampaignId = localStorage.getItem('current-campaign');
+      console.log("📋 Campaign ID do localStorage:", currentCampaignId);
+      
       if (!currentCampaignId) {
+        console.log("❌ Nenhuma campanha selecionada");
         navigate('/campaign-select');
         return;
       }
       
-      // Carregar campanha atual
-      await loadCurrentCampaign();
+      // Carregar campanha atual do Supabase
+      await loadCurrentCampaign(currentCampaignId);
       // Carregar anotações salvas
       await loadCampaignNotes();
       setLoading(false);
-    };
-    
-    checkAuthAndLoadNotes();
+    } catch (error) {
+      console.error('❌ Erro ao carregar dados:', error);
+      toast.error("Erro ao carregar dados da campanha");
+      setLoading(false);
+    }
+  };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const loadCurrentCampaign = async () => {
+  const loadCurrentCampaign = async (campaignId: string) => {
     try {
-      const currentCampaignId = localStorage.getItem('current-campaign');
-      const savedCampaigns = localStorage.getItem('rpg-campaigns');
+      console.log("🔄 Carregando campanha do Supabase:", campaignId);
       
-      if (currentCampaignId && savedCampaigns) {
-        const campaigns: Campaign[] = JSON.parse(savedCampaigns);
-        const campaign = campaigns.find(c => c.id === currentCampaignId);
-        setCurrentCampaign(campaign || null);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("❌ Usuário não autenticado");
+        navigate("/auth");
+        return;
+      }
+
+      console.log("👤 Usuário:", user.id);
+
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .eq('user_id', user.id)
+        .single();
+
+      console.log("📊 Resposta da query:", { data, error });
+
+      if (error) {
+        console.error("❌ Erro ao buscar campanha:", error);
         
-        if (!campaign) {
-          toast.error("Campanha não encontrada");
-          navigate('/campaign-select');
+        if (error.code === 'PGRST116') {
+          toast.error("Campanha não encontrada ou você não tem permissão para acessá-la");
+        } else {
+          toast.error(`Erro: ${error.message}`);
         }
+        navigate('/campaign-select');
+        return;
+      }
+
+      if (data) {
+        console.log("✅ Campanha carregada:", data);
+        setCurrentCampaign(data);
+        toast.success(`Bem-vindo à campanha: ${data.name}`);
       } else {
+        console.log("❌ Nenhuma campanha encontrada");
+        toast.error("Campanha não encontrada");
         navigate('/campaign-select');
       }
+
     } catch (error) {
-      console.error('Erro ao carregar campanha atual:', error);
+      console.error('❌ Erro inesperado:', error);
       toast.error("Erro ao carregar campanha");
+      navigate('/campaign-select');
     }
   };
 
@@ -89,6 +120,9 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Primeiro verificar se a tabela campaign_notes existe
+      console.log("📝 Carregando anotações...");
+      
       const { data, error } = await supabase
         .from('campaign_notes')
         .select('notes')
@@ -96,14 +130,18 @@ const Dashboard = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 é "no rows returned"
-        throw error;
+        console.error("❌ Erro ao carregar anotações:", error);
+        return;
       }
 
       if (data) {
+        console.log("✅ Anotações carregadas");
         setCampaignNotes(data.notes);
+      } else {
+        console.log("ℹ️ Nenhuma anotação encontrada");
       }
     } catch (error: any) {
-      console.error('Erro ao carregar anotações:', error);
+      console.error('❌ Erro ao carregar anotações:', error);
     }
   };
 
@@ -113,6 +151,8 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      console.log("💾 Salvando anotações...");
+
       const { error } = await supabase
         .from('campaign_notes')
         .upsert({
@@ -121,12 +161,16 @@ const Dashboard = () => {
           updated_at: new Date().toISOString(),
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Erro ao salvar anotações:", error);
+        throw error;
+      }
       
+      console.log("✅ Anotações salvas com sucesso!");
       toast.success("Anotações salvas com sucesso!");
     } catch (error: any) {
+      console.error('❌ Erro ao salvar anotações:', error);
       toast.error("Erro ao salvar anotações");
-      console.error('Erro ao salvar anotações:', error);
     } finally {
       setSavingNotes(false);
     }
@@ -153,13 +197,16 @@ const Dashboard = () => {
     toast.success(`🎲 ${dice}: ${result}`);
   };
 
+  
+
   if (loading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center">
             <Dices className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
-            <p className="text-muted-foreground">Carregando...</p>
+            <p className="text-muted-foreground">Carregando campanha...</p>
+           
           </div>
         </div>
       </Layout>
@@ -181,7 +228,6 @@ const Dashboard = () => {
       path: "/players",
       gradient: "from-accent to-primary",
     },
-   
     {
       title: "Combate",
       description: "Gerencie os turnos da batalha",
@@ -230,12 +276,10 @@ const Dashboard = () => {
                       <span className="hidden sm:inline">•</span>
                                           
                       <span className="flex items-center gap-1">
-                        <span className="font-semibold">Última sessão:</span> 
-                        <span>{new Date(currentCampaign.lastPlayed).toLocaleDateString('pt-BR')}</span>
+                        <span className="font-semibold">Criada em:</span> 
+                        <span>{new Date(currentCampaign.created_at).toLocaleDateString('pt-BR')}</span>
                       </span>
                     </div>
-                    
-                  
                   </div>
                   
                   {/* Botão trocar campanha */}
@@ -254,6 +298,7 @@ const Dashboard = () => {
           )}
         </div>
 
+        
         {/* Grid Principal */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Coluna principal com os cards de menu */}

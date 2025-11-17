@@ -1,3 +1,4 @@
+// src/types.ts
 export type Json =
   | string
   | number
@@ -7,8 +8,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
@@ -47,6 +46,7 @@ export type Database = {
       npcs: {
         Row: {
           attributes: Json
+          campaign_id: string; // NOVO
           created_at: string
           id: string
           name: string
@@ -56,6 +56,7 @@ export type Database = {
         }
         Insert: {
           attributes?: Json
+          campaign_id: string; // NOVO
           created_at?: string
           id?: string
           name: string
@@ -65,6 +66,7 @@ export type Database = {
         }
         Update: {
           attributes?: Json
+          campaign_id: string; // NOVO
           created_at?: string
           id?: string
           name?: string
@@ -140,6 +142,50 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          system: string
+          status: string
+          settings: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          system?: string
+          status?: string
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          system?: string
+          status?: string
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -156,11 +202,85 @@ export type Database = {
   }
 }
 
+// Aliases para facilitar o uso
+export type Tables = Database['public']['Tables']
+export type Campaign = Tables['campaigns']['Row']
+export type CampaignInsert = Tables['campaigns']['Insert']
+export type CampaignUpdate = Tables['campaigns']['Update']
+
+export type Npc = Tables['npcs']['Row']
+export type NpcInsert = Tables['npcs']['Insert']
+export type NpcUpdate = Tables['npcs']['Update']
+
+export type Player = Tables['players']['Row']
+export type PlayerInsert = Tables['players']['Insert']
+export type PlayerUpdate = Tables['players']['Update']
+
+export type InitiativeEntry = Tables['initiative_entries']['Row']
+export type InitiativeEntryInsert = Tables['initiative_entries']['Insert']
+export type InitiativeEntryUpdate = Tables['initiative_entries']['Update']
+
+export type Profile = Tables['profiles']['Row']
+export type ProfileInsert = Tables['profiles']['Insert']
+export type ProfileUpdate = Tables['profiles']['Update']
+
+// Tipos auxiliares para formulários
+export interface CampaignFormData {
+  name: string
+  system: string
+  description: string
+}
+
+export interface NpcFormData {
+  name: string
+  attributes: Json
+  spells: Json
+  current_hp?: number
+  max_hp?: number
+  armor_class?: number
+  fortitude_save?: number
+  reflex_save?: number
+  will_save?: number
+  perception?: number
+  attacks?: string
+  image_url?: string
+  observation?: string
+}
+
+export interface PlayerFormData {
+  name: string
+  character_class?: string
+  level?: number
+  hp_current?: number
+  hp_max?: number
+  ac?: number
+  attributes?: Json
+  notes?: string
+}
+
+// Tipos para selects
+export type SystemType = 
+  | 'D&D 5e'
+  | 'Pathfinder'
+  | 'Call of Cthulhu'
+  | 'Shadowrun'
+  | 'Cyberpunk Red'
+  | 'Tormenta20'
+  | 'Ordem Paranormal'
+  | 'Outro'
+
+export type CampaignStatus = 
+  | 'active'
+  | 'inactive'
+  | 'completed'
+  | 'on_hold'
+
+// Restante do código permanece igual...
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export type Tables<
+export type Tables_Old<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
@@ -189,7 +309,7 @@ export type Tables<
       : never
     : never
 
-export type TablesInsert<
+export type TablesInsert_Old<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -214,7 +334,7 @@ export type TablesInsert<
       : never
     : never
 
-export type TablesUpdate<
+export type TablesUpdate_Old<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },

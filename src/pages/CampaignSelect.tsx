@@ -6,15 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Calendar, Dice1, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Campaign {
   id: string;
   name: string;
   system: string;
   description: string;
-  created: string;
-  lastPlayed: string;
-  characterCount: number;
+  created_at: string;
+  updated_at: string;
+  status: string;
 }
 
 const CampaignSelect: React.FC = () => {
@@ -26,33 +27,90 @@ const CampaignSelect: React.FC = () => {
     loadCampaigns();
   }, []);
 
-  const loadCampaigns = () => {
+  const loadCampaigns = async () => {
     try {
-      const savedCampaigns = localStorage.getItem('rpg-campaigns');
-      if (savedCampaigns) {
-        setCampaigns(JSON.parse(savedCampaigns));
+      console.log("🔄 Carregando campanhas...");
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("👤 Usuário autenticado:", user);
+      
+      if (!user) {
+        console.log("⚠️ Nenhum usuário autenticado, usando ID temporário");
+        await loadCampaignsForUser('default-user');
+        return;
       }
+
+      await loadCampaignsForUser(user.id);
     } catch (error) {
-      console.error('Erro ao carregar campanhas:', error);
+      console.error('❌ Erro ao carregar campanhas:', error);
       toast.error("Erro ao carregar campanhas");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectCampaign = (campaignId: string) => {
-    localStorage.setItem('current-campaign', campaignId);
-    toast.success("Campanha selecionada!");
-    navigate('/dashboard');
+  const loadCampaignsForUser = async (userId: string) => {
+    console.log("📋 Buscando campanhas para usuário:", userId);
+    
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("❌ Erro ao buscar campanhas:", error);
+      throw error;
+    }
+
+    console.log("✅ Campanhas carregadas:", data);
+    setCampaigns(data || []);
+  };
+
+  const handleSelectCampaign = async (campaignId: string) => {
+    console.log("🎯 Selecionando campanha:", campaignId);
+    
+    try {
+      // Salvar no localStorage
+      localStorage.setItem('current-campaign', campaignId);
+      console.log("💾 Campanha salva no localStorage:", campaignId);
+      
+      toast.success("Campanha selecionada!");
+      
+      // Navegar para o dashboard - CORRIGIDO: usar /dashboard
+      console.log("🚀 Navegando para /dashboard");
+      navigate('/dashboard');
+      
+    } catch (error) {
+      console.error("❌ Erro ao selecionar campanha:", error);
+      toast.error("Erro ao selecionar campanha");
+    }
   };
 
   const handleCreateCampaign = () => {
+    console.log("➕ Navegando para criar nova campanha");
     navigate('/campaigns/new');
   };
 
   const handleEditCampaign = (e: React.MouseEvent, campaignId: string) => {
     e.stopPropagation();
+    console.log("✏️ Editando campanha:", campaignId);
     navigate(`/campaigns/edit/${campaignId}`);
+  };
+
+  // Testar redirecionamento
+  const testNavigation = () => {
+    console.log("🧪 Testando navegação...");
+    console.log("📍 Tentando navegar para /dashboard");
+    navigate('/dashboard');
+  };
+
+  // Função para verificar se o Dashboard existe
+  const checkDashboard = () => {
+    console.log("🔍 Verificando Dashboard...");
+    console.log("📍 Rota /dashboard existe no App.tsx");
+    console.log("📍 Tentando navegar...");
+    navigate('/dashboard');
   };
 
   if (loading) {
@@ -178,13 +236,13 @@ const CampaignSelect: React.FC = () => {
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4 text-muted-foreground" />
-                        <span>{campaign.characterCount} personagens</span>
+                        <span>0 personagens</span>
                       </div>
                       
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
                         <span>
-                          {new Date(campaign.lastPlayed).toLocaleDateString('pt-BR')}
+                          {new Date(campaign.created_at).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
                     </div>
@@ -194,6 +252,7 @@ const CampaignSelect: React.FC = () => {
                         className="w-full bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)]"
                         onClick={(e) => {
                           e.stopPropagation();
+                          console.log("🎯 Botão selecionar clicado para:", campaign.id);
                           handleSelectCampaign(campaign.id);
                         }}
                       >
@@ -205,22 +264,7 @@ const CampaignSelect: React.FC = () => {
               ))}
             </div>
           </div>
-        )}
-
-        {/* Informações adicionais */}
-        {campaigns.length > 0 && (
-          <Card className="border-2 border-border bg-gradient-to-br from-blue-500/10 to-blue-600/10">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <h3 className="font-semibold text-blue-600 mb-2">💡 Dica</h3>
-                <p className="text-blue-700 text-sm">
-                  Suas campanhas são salvas localmente no seu navegador. 
-                  Você pode criar quantas campanhas quiser e alternar entre elas a qualquer momento.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        )}       
       </div>
     </Layout>
   );

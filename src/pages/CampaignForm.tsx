@@ -1,4 +1,4 @@
-// src/pages/CampaignForm.tsx
+// src/pages/CampaignForm.tsx - Versão Simplificada para Teste
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -10,16 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, ArrowLeft, Dice1, BookOpen } from "lucide-react";
 import { toast } from "sonner";
-
-interface Campaign {
-  id: string;
-  name: string;
-  system: string;
-  description: string;
-  created: string;
-  lastPlayed: string;
-  characterCount: number;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 const CampaignForm: React.FC = () => {
   const navigate = useNavigate();
@@ -36,30 +27,115 @@ const CampaignForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Testar autenticação e permissões
+  const testAuthAndPermissions = async () => {
+    console.log("🔐 Testando autenticação e permissões...");
+    
+    try {
+      // 1. Verificar autenticação
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("👤 Usuário:", user);
+      
+      if (authError) {
+        console.error("❌ Erro de auth:", authError);
+        return;
+      }
+
+      if (!user) {
+        console.warn("⚠️ Nenhum usuário autenticado");
+        toast.error("Faça login para criar campanhas");
+        return;
+      }
+
+      // 2. Testar INSERT
+      console.log("🧪 Testando INSERT...");
+      const testData = {
+        name: "Campanha Teste",
+        system: "D&D 5e",
+        description: "Campanha de teste",
+        user_id: user.id,
+        status: 'active',
+        settings: {}
+      };
+
+      const { data: insertData, error: insertError } = await supabase
+        .from('campaigns')
+        .insert([testData])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("❌ Erro no INSERT:", insertError);
+        console.error("📋 Detalhes:", {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details
+        });
+        toast.error(`Erro RLS/Insert: ${insertError.message}`);
+        return;
+      }
+
+      console.log("✅ INSERT funcionou:", insertData);
+
+      // 3. Testar DELETE do registro de teste
+      const { error: deleteError } = await supabase
+        .from('campaigns')
+        .delete()
+        .eq('id', insertData.id);
+
+      if (deleteError) {
+        console.error("❌ Erro no DELETE:", deleteError);
+      } else {
+        console.log("✅ DELETE funcionou");
+      }
+
+      toast.success("Permissões RLS estão OK!");
+
+    } catch (error) {
+      console.error("❌ Erro no teste:", error);
+    }
+  };
+
   useEffect(() => {
     if (isEditing && id) {
       loadCampaignData(id);
     }
   }, [isEditing, id]);
 
-  const loadCampaignData = (campaignId: string) => {
+  const loadCampaignData = async (campaignId: string) => {
     setLoading(true);
     try {
-      const savedCampaigns = localStorage.getItem('rpg-campaigns');
-      if (savedCampaigns) {
-        const campaigns: Campaign[] = JSON.parse(savedCampaigns);
-        const campaignToEdit = campaigns.find(c => c.id === campaignId);
-        if (campaignToEdit) {
-          setFormData({
-            name: campaignToEdit.name,
-            system: campaignToEdit.system,
-            description: campaignToEdit.description
-          });
-        }
+      console.log("🔄 Carregando campanha:", campaignId);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error("❌ Erro ao carregar:", error);
+        toast.error(`Erro: ${error.message}`);
+        return;
+      }
+
+      if (data) {
+        setFormData({
+          name: data.name,
+          system: data.system,
+          description: data.description || ""
+        });
       }
     } catch (error) {
-      console.error('Erro ao carregar campanha:', error);
-      toast.error("Erro ao carregar dados da campanha");
+      console.error('❌ Erro:', error);
+      toast.error("Erro ao carregar campanha");
     } finally {
       setLoading(false);
     }
@@ -76,48 +152,49 @@ const CampaignForm: React.FC = () => {
     setSaving(true);
 
     try {
-      // Simular uma requisição async
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const savedCampaigns = localStorage.getItem('rpg-campaigns');
-      const existingCampaigns: Campaign[] = savedCampaigns ? JSON.parse(savedCampaigns) : [];
-
-      if (isEditing && id) {
-        // Editar campanha existente
-        const updatedCampaigns = existingCampaigns.map(campaign => 
-          campaign.id === id 
-            ? { 
-                ...campaign, 
-                name: formData.name.trim(),
-                system: formData.system,
-                description: formData.description.trim()
-              }
-            : campaign
-        );
-        localStorage.setItem('rpg-campaigns', JSON.stringify(updatedCampaigns));
-        toast.success("Campanha atualizada com sucesso!");
-      } else {
-        // Criar nova campanha
-        const newCampaign: Campaign = {
-          id: Date.now().toString(),
-          name: formData.name.trim(),
-          system: formData.system,
-          description: formData.description.trim(),
-          created: new Date().toISOString(),
-          lastPlayed: new Date().toISOString(),
-          characterCount: 0
-        };
-
-        const updatedCampaigns = [...existingCampaigns, newCampaign];
-        localStorage.setItem('rpg-campaigns', JSON.stringify(updatedCampaigns));
-        localStorage.setItem('current-campaign', newCampaign.id);
-        toast.success("Campanha criada com sucesso!");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
       }
 
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Erro ao salvar campanha:', error);
-      toast.error("Erro ao salvar campanha. Tente novamente.");
+      const campaignData = {
+        name: formData.name.trim(),
+        system: formData.system,
+        description: formData.description.trim() || null,
+        user_id: user.id,
+        status: 'active',
+        settings: {}
+      };
+
+      console.log("💾 Salvando:", campaignData);
+
+      if (isEditing && id) {
+        const { data, error } = await supabase
+          .from('campaigns')
+          .update(campaignData)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        toast.success("Campanha atualizada!");
+      } else {
+        const { data, error } = await supabase
+          .from('campaigns')
+          .insert([campaignData])
+          .select()
+          .single();
+
+        if (error) throw error;
+        localStorage.setItem('current-campaign', data.id);
+        toast.success("Campanha criada!");
+      }
+
+      navigate('/campaigns');
+    } catch (error: any) {
+      console.error('❌ Erro ao salvar:', error);
+      toast.error(`Erro: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -125,17 +202,11 @@ const CampaignForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSystemChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      system: value
-    }));
+    setFormData(prev => ({ ...prev, system: value }));
   };
 
   if (loading) {
@@ -170,38 +241,28 @@ const CampaignForm: React.FC = () => {
                 {isEditing ? 'Editar Campanha' : 'Criar Nova Campanha'}
               </h1>
               <p className="text-muted-foreground">
-                {isEditing 
-                  ? 'Atualize os detalhes da sua campanha' 
-                  : 'Preencha os detalhes para começar uma nova aventura'
-                }
+                {isEditing ? 'Atualize os detalhes' : 'Preencha os detalhes para começar'}
               </p>
             </div>
           </div>
         </div>
 
+       
         {/* Form Card */}
         <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
-              <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                Detalhes da Campanha
-              </span>
+              Detalhes da Campanha
             </CardTitle>
             <CardDescription>
-              {isEditing 
-                ? 'Atualize as informações da sua campanha' 
-                : 'Preencha as informações básicas para começar'
-              }
+              {isEditing ? 'Atualize as informações' : 'Preencha as informações básicas'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Nome da Campanha */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Nome da Campanha *
-                </Label>
+                <Label htmlFor="name">Nome da Campanha *</Label>
                 <Input
                   type="text"
                   id="name"
@@ -211,110 +272,60 @@ const CampaignForm: React.FC = () => {
                   placeholder="Ex: A Jornada dos Heróis Perdidos"
                   required
                   disabled={saving}
-                  className="border-2 border-border focus:border-primary/50 transition-colors"
+                  className="border-2 border-border"
                 />
               </div>
 
-              {/* Sistema de RPG */}
               <div className="space-y-2">
-                <Label htmlFor="system" className="text-sm font-medium">
-                  Sistema de RPG
-                </Label>
+                <Label htmlFor="system">Sistema de RPG</Label>
                 <Select value={formData.system} onValueChange={handleSystemChange} disabled={saving}>
-                  <SelectTrigger className="border-2 border-border focus:border-primary/50 transition-colors">
-                    <SelectValue placeholder="Selecione um sistema" />
+                  <SelectTrigger className="border-2 border-border">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="D&D 5e">Dungeons & Dragons 5e</SelectItem>
+                    <SelectItem value="D&D 5e">D&D 5e</SelectItem>
                     <SelectItem value="Pathfinder">Pathfinder</SelectItem>
-                    <SelectItem value="Call of Cthulhu">Call of Cthulhu</SelectItem>
-                    <SelectItem value="Shadowrun">Shadowrun</SelectItem>
-                    <SelectItem value="Cyberpunk Red">Cyberpunk Red</SelectItem>
-                    <SelectItem value="Tormenta20">Tormenta20</SelectItem>
-                    <SelectItem value="Outro">Outro Sistema</SelectItem>
+                    <SelectItem value="Ordem Paranormal">Ordem Paranormal</SelectItem>
+                    <SelectItem value="Outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Descrição */}
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">
-                  Descrição da Campanha
-                  <span className="text-muted-foreground text-sm font-normal ml-1">(Opcional)</span>
-                </Label>
+                <Label htmlFor="description">Descrição (Opcional)</Label>
                 <Textarea
                   id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Descreva o enredo principal, o mundo, temas importantes..."
+                  placeholder="Descreva sua campanha..."
                   rows={4}
                   disabled={saving}
-                  className="border-2 border-border focus:border-primary/50 transition-colors resize-vertical min-h-[120px]"
+                  className="border-2 border-border"
                 />
-                <p className="text-xs text-muted-foreground">
-                  {formData.description.length}/500 caracteres
-                </p>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center justify-end gap-3 pt-6 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/campaign-select')}
+                  onClick={() => navigate('/campaigns')}
                   disabled={saving}
-                  className="border-2 border-border hover:border-primary/50 transition-colors"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={saving || !formData.name.trim()}
-                  className="bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] transition-all"
+                  className="bg-gradient-to-r from-primary to-primary/80"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? "Salvando..." : (isEditing ? "Salvar Alterações" : "Criar Campanha")}
+                  {saving ? "Salvando..." : (isEditing ? "Salvar" : "Criar")}
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
-
-        {/* Tips Card - Apenas para criação */}
-        {!isEditing && (
-          <Card className="border-2 border-border bg-gradient-to-br from-blue-500/10 to-blue-600/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-600">
-                <Dice1 className="w-5 h-5" />
-                Dicas para sua campanha
-              </CardTitle>
-              <CardDescription className="text-blue-600/80">
-                Comece sua aventura com o pé direito
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-blue-700 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
-                  <span>Escolha um nome que capture a essência da aventura</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
-                  <span>Uma boa descrição ajuda os jogadores a se imergirem no mundo</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
-                  <span>Você pode editar essas informações a qualquer momento</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
-                  <span>Selecione o sistema que melhor se adapta ao estilo da sua campanha</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </Layout>
   );
