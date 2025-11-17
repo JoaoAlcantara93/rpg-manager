@@ -24,10 +24,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Rota raiz */}
-          <Route path="/" element={<Navigate to="/campaign-select" replace />} />
+          <Route path="/" element={<Auth />} />
           
           {/* Autenticação */}
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth" element={<Navigate to="/campaign-select" replace />}/>
           
           {/* Fluxo de Campanhas */}
           <Route path="/campaign-select" element={<CampaignSelect />} />

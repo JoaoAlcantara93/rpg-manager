@@ -230,7 +230,7 @@ const Dashboard = () => {
     },
     {
       title: "Combate",
-      description: "Gerencie os turnos da batalha",
+      description: "Gerencie os combates",
       icon: Swords,
       path: "/initiative",
       gradient: "from-destructive to-primary",
@@ -303,7 +303,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Coluna principal com os cards de menu */}
           <div className="xl:col-span-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -325,6 +325,60 @@ const Dashboard = () => {
                 );
               })}
             </div>
+
+            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80 mt-6">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Dices className="w-5 h-5" />
+                  <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                    Rolagem Rápida
+                  </span>
+                </CardTitle>
+                <CardDescription className="text-sm sm:text-base">
+                  Role dados rapidamente durante a sessão
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <div className="flex flex-col gap-4">
+                  {/* Botões de Dados */}
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                    {[
+                      { dice: '1d20', label: '1d20' },
+                      { dice: '1d6', label: '1d6' },
+                      { dice: '1d8', label: '1d8' },
+                      { dice: '1d100', label: '1d100' },
+                      { dice: '1d4', label: '1d4' },
+                      { dice: '1d12', label: '1d12' },
+                    ].map(({ dice, label }) => (
+                      <Button
+                        key={dice}
+                        onClick={() => rollDice(dice)}
+                        variant="outline"
+                        className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 min-w-[60px] text-sm py-2 h-auto"
+                        size="sm"
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Resultado - agora em linha em telas maiores */}
+                  <div className="flex items-center justify-center sm:justify-start gap-3">
+                    <div className="text-center sm:text-left">
+                      <div className="text-sm text-muted-foreground">Última rolagem</div>
+                      {lastRoll ? (
+                        <div className="flex items-center gap-2 justify-center sm:justify-start">
+                          <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
+                          <span className="text-xl font-bold text-primary">{lastRoll.result}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">--</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Coluna lateral com anotações */}
@@ -364,59 +418,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card de Rolagem Rápida */}
-        <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Dices className="w-5 h-5" />
-              <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                Rolagem Rápida
-              </span>
-            </CardTitle>
-            <CardDescription className="text-sm sm:text-base">
-              Role dados rapidamente durante a sessão
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="flex flex-col gap-4">
-              {/* Botões de Dados */}
-              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                {[
-                  { dice: '1d20', label: '1d20' },
-                  { dice: '1d6', label: '1d6' },
-                  { dice: '1d8', label: '1d8' },
-                  { dice: '1d100', label: '1d100' },
-                  { dice: '1d4', label: '1d4' },
-                  { dice: '1d12', label: '1d12' },
-                ].map(({ dice, label }) => (
-                  <Button
-                    key={dice}
-                    onClick={() => rollDice(dice)}
-                    variant="outline"
-                    className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 min-w-[60px] text-sm py-2 h-auto"
-                    size="sm"
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Resultado - agora em linha em telas maiores */}
-              <div className="flex items-center justify-center sm:justify-start gap-3">
-                <div className="text-center sm:text-left">
-                  <div className="text-sm text-muted-foreground">Última rolagem</div>
-                  {lastRoll ? (
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
-                      <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
-                      <span className="text-xl font-bold text-primary">{lastRoll.result}</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">--</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+       
       </div>
     </Layout>
   );
