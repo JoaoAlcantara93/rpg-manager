@@ -178,3 +178,174 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .pergaminho {
+    background: 
+      /* Cor base do papiro envelhecido */
+      hsl(36 35% 75%),
+      /* Textura de pergaminho sutil */
+      radial-gradient(
+        circle at 20% 80%,
+        hsl(36 30% 70% / 0.2) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        hsl(36 25% 65% / 0.15) 0%,
+        transparent 50%
+      ),
+      /* Padrão de linhas finas */
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        hsl(36 25% 65% / 0.08) 1px,
+        hsl(36 25% 65% / 0.08) 2px
+      );
+    
+    border: 1px solid hsl(36 30% 60%);
+    position: relative;
+    box-shadow: 
+      inset 0 0 30px hsl(36 25% 55% / 0.3),
+      0 4px 20px hsl(36 20% 20% / 0.4);
+    color: hsl(36 25% 25%);
+  }
+
+  .pergaminho::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 1px solid hsl(36 100% 90% / 0.1);
+    pointer-events: none;
+  }
+}
+
+@layer components {
+  .card-pergaminho {
+    background: 
+      /* Cor base do papiro envelhecido */
+      hsl(36 35% 75%),
+      /* Textura de pergaminho */
+      radial-gradient(
+        ellipse at 30% 70%,
+        hsl(36 30% 70% / 0.25) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse at 70% 30%,
+        hsl(36 25% 65% / 0.2) 0%,
+        transparent 60%
+      ),
+      /* Manchas de idade */
+      radial-gradient(
+        circle at 90% 10%,
+        hsl(36 20% 60% / 0.15) 0%,
+        transparent 25%
+      ),
+      radial-gradient(
+        circle at 10% 90%,
+        hsl(36 20% 60% / 0.15) 0%,
+        transparent 25%
+      ),
+      /* Veias do papel */
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        hsl(36 25% 70% / 0.05) 3px,
+        hsl(36 25% 70% / 0.05) 6px
+      );
+    
+    border: 1px solid hsl(36 30% 60%);
+    box-shadow: 
+      inset 0 0 25px hsl(36 25% 55% / 0.4),
+      0 4px 15px hsl(36 20% 20% / 0.35);
+    position: relative;
+    overflow: hidden;
+    color: hsl(36 25% 25%);
+  }
+
+  .card-pergaminho:hover {
+    border-color: hsl(36 35% 50%);
+    box-shadow: 
+      inset 0 0 30px hsl(36 25% 55% / 0.6),
+      0 8px 25px hsl(36 20% 20% / 0.5),
+      0 0 20px hsl(36 30% 50% / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .card-pergaminho::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(36 100% 95% / 0.08),
+      transparent
+    );
+    animation: shine 4s infinite;
+  }
+
+  @keyframes shine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+}
+
+/* Ajustes para textos sobre o papiro envelhecido */
+@layer components {
+  .texto-pergaminho {
+    color: hsl(36 25% 25%);
+  }
+  
+  .texto-pergaminho-suave {
+    color: hsl(36 20% 35%);
+  }
+  
+  .texto-pergaminho-muted {
+    color: hsl(36 15% 45%);
+  }
+}
+
+/* Efeito de queima nas bordas para mais realismo */
+@layer components {
+  .pergaminho-queimado::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(
+        circle at 0% 0%,
+        transparent 70%,
+        hsl(36 20% 50% / 0.1) 100%
+      ),
+      radial-gradient(
+        circle at 100% 0%,
+        transparent 70%,
+        hsl(36 20% 50% / 0.1) 100%
+      ),
+      radial-gradient(
+        circle at 100% 100%,
+        transparent 70%,
+        hsl(36 20% 50% / 0.1) 100%
+      ),
+      radial-gradient(
+        circle at 0% 100%,
+        transparent 70%,
+        hsl(36 20% 50% / 0.1) 100%
+      );
+    pointer-events: none;
+  }
+}
+

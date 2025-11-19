@@ -1,4 +1,4 @@
-// src/pages/NPCs.tsx - Versão Corrigida
+// src/pages/NPCs.tsx - Versão com TextArea Simples
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users } from "lucide-react";
@@ -68,7 +68,6 @@ const NPCs = () => {
     try {
       console.log("🔄 Buscando NPCs para campanha:", campaignId);
       
-      // ESPECIFICAR TODOS OS CAMPOS que queremos retornar
       const { data, error } = await supabase
         .from('npcs')
         .select(`
@@ -100,8 +99,6 @@ const NPCs = () => {
       }
 
       console.log("✅ NPCs carregados:", data);
-      
-      // Os dados já vêm com todos os campos, então podemos usar diretamente
       setNpcs(data || []);
     } catch (error) {
       console.error("Erro ao carregar NPCs:", error);
@@ -122,7 +119,6 @@ const NPCs = () => {
 
       console.log("💾 Iniciando salvamento do NPC...");
 
-      // SEMPRE obter o usuário autenticado
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
@@ -141,8 +137,8 @@ const NPCs = () => {
         campaign_id: currentCampaignId,
         user_id: user.id,
         name: formData.name,
-        attributes: formData.attributes,
-        spells: formData.spells,
+        attributes: formData.attributes || "",
+        spells: formData.spells || "",
         current_hp: parseInt(formData.current_hp) || 0,
         max_hp: parseInt(formData.max_hp) || 0,
         armor_class: parseInt(formData.armor_class) || 10,
@@ -158,7 +154,6 @@ const NPCs = () => {
       console.log("📤 Dados a serem enviados para o Supabase:", npcData);
 
       if (editingNpc) {
-        // Atualizar NPC existente - ESPECIFICAR OS CAMPOS A RETORNAR
         const { data, error } = await supabase
           .from('npcs')
           .update(npcData)
@@ -197,7 +192,6 @@ const NPCs = () => {
         ));
         toast.success("NPC atualizado com sucesso!");
       } else {
-        // Criar novo NPC - ESPECIFICAR OS CAMPOS A RETORNAR
         const { data, error } = await supabase
           .from('npcs')
           .insert([npcData])
@@ -246,8 +240,10 @@ const NPCs = () => {
     setEditingNpc(npc);
     setFormData({
       name: npc.name,
-      attributes: typeof npc.attributes === 'string' ? npc.attributes : JSON.stringify(npc.attributes || {}, null, 2),
-      spells: typeof npc.spells === 'string' ? npc.spells : JSON.stringify(npc.spells || [], null, 2),
+      attributes: typeof npc.attributes === 'string' ? npc.attributes : 
+                 npc.attributes ? JSON.stringify(npc.attributes, null, 2) : "",
+      spells: typeof npc.spells === 'string' ? npc.spells : 
+              npc.spells ? JSON.stringify(npc.spells, null, 2) : "",
       current_hp: (npc.current_hp || 0).toString(),
       max_hp: (npc.max_hp || 0).toString(),
       armor_class: (npc.armor_class || 10).toString(),
@@ -308,19 +304,22 @@ const NPCs = () => {
     navigate("/dashboard");
   };
 
-  // Função para debug
-  const debugDatabase = async () => {
-    console.log("🐛 Debug do banco de dados:");
-    console.log("📋 Campaign ID:", currentCampaignId);
-    
-    if (currentCampaignId) {
-      const { data, error } = await supabase
-        .from('npcs')
-        .select('*')
-        .eq('campaign_id', currentCampaignId);
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    resetForm();
+  };
 
-      console.log("📊 NPCs no banco:", data);
-      console.log("❌ Erro:", error);
+  // Função para formatar a exibição dos atributos e magias
+  const formatDisplayText = (text: string) => {
+    if (!text) return "";
+    
+    try {
+      // Tenta parsear como JSON para formatar bonito
+      const parsed = JSON.parse(text);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      // Se não for JSON válido, retorna o texto original
+      return text;
     }
   };
 
@@ -415,7 +414,6 @@ const NPCs = () => {
                   </div>
                   
                   <div className="space-y-3 text-sm">
-                    {/* Status Básicos */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">HP:</span>
@@ -443,7 +441,6 @@ const NPCs = () => {
                       </div>                      
                     </div>
 
-                    {/* Observações */}
                     {npc.observation && (
                       <div>
                         <p className="text-muted-foreground mb-1">Observações:</p>
@@ -453,7 +450,6 @@ const NPCs = () => {
                       </div>
                     )}
 
-                    {/* Ataques */}
                     {npc.attacks && (
                       <div>
                         <p className="text-muted-foreground mb-1">Ataques:</p>
@@ -463,7 +459,6 @@ const NPCs = () => {
                       </div>
                     )}
 
-                    {/* Atributos */}
                     {npc.attributes && (
                       <div>
                         <p className="text-muted-foreground mb-1">Atributos:</p>
@@ -473,7 +468,6 @@ const NPCs = () => {
                       </div>
                     )}
 
-                    {/* Magias */}
                     {npc.spells && (
                       <div>
                         <p className="text-muted-foreground mb-1">Magias:</p>
@@ -492,7 +486,7 @@ const NPCs = () => {
         {/* Modal de Adicionar/Editar NPC */}
         {dialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-card rounded-lg border-2 border-border max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-border">
                 <h3 className="text-xl font-bold text-foreground">
                   {editingNpc ? "Editar NPC" : "Novo NPC"}
@@ -501,8 +495,217 @@ const NPCs = () => {
                   Preencha os dados do NPC
                 </p>
               </div>
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                {/* ... (formulário permanece igual) */}
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Nome */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Nome do NPC *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="Digite o nome do NPC"
+                    />
+                  </div>
+
+                  {/* Status Básicos */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      HP Atual
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.current_hp}
+                      onChange={(e) => setFormData({ ...formData, current_hp: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      HP Máximo
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.max_hp}
+                      onChange={(e) => setFormData({ ...formData, max_hp: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Classe de Armadura (CA)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.armor_class}
+                      onChange={(e) => setFormData({ ...formData, armor_class: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Percepção
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.perception}
+                      onChange={(e) => setFormData({ ...formData, perception: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  {/* Salvamentos */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Salvamento de Fortitude
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.fortitude_save}
+                      onChange={(e) => setFormData({ ...formData, fortitude_save: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Salvamento de Reflexos
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.reflex_save}
+                      onChange={(e) => setFormData({ ...formData, reflex_save: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Salvamento de Vontade
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.will_save}
+                      onChange={(e) => setFormData({ ...formData, will_save: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  {/* URL da Imagem */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      URL da Imagem
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  {/* Ataques */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Ataques
+                    </label>
+                    <textarea
+                      value={formData.attacks}
+                      onChange={(e) => setFormData({ ...formData, attacks: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="Descreva os ataques do NPC..."
+                    />
+                  </div>
+
+                  {/* Observações */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Observações
+                    </label>
+                    <textarea
+                      value={formData.observation}
+                      onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="Adicione observações sobre o NPC..."
+                    />
+                  </div>
+
+                  {/* Atributos (TextArea Simples) */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Atributos
+                    </label>
+                    <textarea
+                      value={formData.attributes}
+                      onChange={(e) => setFormData({ ...formData, attributes: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="Força: 10
+Destreza: 12
+Constituição: 14
+Inteligência: 8
+Sabedoria: 10
+Carisma: 16"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Descreva os atributos do NPC (um por linha)
+                    </p>
+                  </div>
+
+                  {/* Magias (TextArea Simples) */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Magias
+                    </label>
+                    <textarea
+                      value={formData.spells}
+                      onChange={(e) => setFormData({ ...formData, spells: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                      placeholder="Bola de Fogo
+Cura
+Proteção Divina
+Raio de Gelo"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Liste as magias do NPC (uma por linha)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botões do Formulário */}
+                <div className="flex gap-3 justify-end pt-6 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={handleCloseDialog}
+                    className="px-6 py-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200"
+                  >
+                    {editingNpc ? "Atualizar NPC" : "Criar NPC"}
+                  </button>
+                </div>
               </form>
             </div>
           </div>

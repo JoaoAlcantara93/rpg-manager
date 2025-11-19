@@ -197,8 +197,6 @@ const Dashboard = () => {
     toast.success(`🎲 ${dice}: ${result}`);
   };
 
-  
-
   if (loading) {
     return (
       <Layout>
@@ -206,7 +204,6 @@ const Dashboard = () => {
           <div className="text-center">
             <Dices className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
             <p className="text-muted-foreground">Carregando campanha...</p>
-           
           </div>
         </div>
       </Layout>
@@ -298,7 +295,6 @@ const Dashboard = () => {
           )}
         </div>
 
-        
         {/* Grid Principal */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Coluna principal com os cards de menu */}
@@ -309,15 +305,17 @@ const Dashboard = () => {
                 return (
                   <Card
                     key={item.path}
-                    className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-[var(--shadow-card)] border-2 border-border hover:border-primary/50 bg-gradient-to-br from-card to-card/80"
+                    className="card-pergaminho cursor-pointer transition-all duration-300 hover:scale-105 border hover:border-primary/30"
                     onClick={() => navigate(item.path)}
                   >
-                    <CardHeader className="space-y-3 p-4 sm:p-6">
-                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg`}>
+                    <CardHeader className="space-y-3 p-4 sm:p-6 relative z-10">
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10`}>
                         <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                       </div>
-                      <CardTitle className="text-xl sm:text-2xl">{item.title}</CardTitle>
-                      <CardDescription className="text-muted-foreground text-sm sm:text-base">
+                      <CardTitle className="text-xl sm:text-2xl text-foreground font-bold">
+                        {item.title}
+                      </CardTitle>
+                      <CardDescription className="text-muted-foreground/90 text-sm sm:text-base leading-relaxed">
                         {item.description}
                       </CardDescription>
                     </CardHeader>
@@ -326,7 +324,8 @@ const Dashboard = () => {
               })}
             </div>
 
-            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80 mt-6">
+            {/* Card de Rolagem Rápida */}
+            <Card className="card-pergaminho mt-6">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <Dices className="w-5 h-5" />
@@ -383,7 +382,7 @@ const Dashboard = () => {
 
           {/* Coluna lateral com anotações */}
           <div className="xl:col-span-1">
-            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80 h-full">
+            <Card className="card-pergaminho h-full">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -399,7 +398,7 @@ const Dashboard = () => {
                   value={campaignNotes}
                   onChange={(e) => setCampaignNotes(e.target.value)}
                   placeholder="Digite suas anotações, ideias, plot points, ou qualquer informação importante da campanha..."
-                  className="min-h-[250px] sm:min-h-[300px] resize-none border-2 border-border focus:border-primary/50 transition-colors text-sm sm:text-base"
+                  className="min-h-[250px] sm:min-h-[300px] resize-none border-2 border-border focus:border-primary/50 transition-colors text-sm sm:text-base bg-background/50"
                 />
                 <Button
                   onClick={saveCampaignNotes}
@@ -416,9 +415,6 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
-
-        {/* Card de Rolagem Rápida */}
-       
       </div>
     </Layout>
   );

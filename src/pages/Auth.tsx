@@ -32,13 +32,10 @@ const Auth = () => {
     const savedCampaigns = localStorage.getItem('rpg-campaigns');
     const campaigns = savedCampaigns ? JSON.parse(savedCampaigns) : [];
     
-    if (campaigns.length === 0) {
-      navigate("/campaigns/new"); // Vai direto criar primeira campanha
-      toast.info("Vamos criar sua primeira campanha!");
-    } else {
-      navigate("/campaign-select"); // Vai para seleção de campanha
-      toast.success("Login realizado com sucesso!");
-    }
+    
+    navigate("/campaign-select"); // Vai para seleção de campanha
+    toast.success("Login realizado com sucesso!");
+    
   };
 
   const handleAuth = async (e: React.FormEvent) => {
