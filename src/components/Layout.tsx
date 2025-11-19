@@ -47,11 +47,15 @@ const Layout = ({ children }: LayoutProps) => {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-[var(--shadow-glow)]">
-              <Dices className="w-5 h-5 text-primary-foreground" />
-            </div>
+          <div className="w-10 h-10 rounded-full border-2 border-primary/20 flex items-center justify-center overflow-hidden bg-transparent">
+            <img 
+              src="/images/logo.png" 
+              alt="Maestrum Logo" 
+              className="w-full h-full object-cover"
+            />
+          </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
-              RPG Manager
+              Maestrum
             </h1>
           </div>
           <Button

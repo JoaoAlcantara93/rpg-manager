@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Dices } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,27 +14,13 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
-/*
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        redirectAfterLogin();
-      }
-    };
-    checkUser();
-  }, [navigate]);
-*/
-  // Função para redirecionar após login
+
   const redirectAfterLogin = () => {
-    // Verificar se já tem campanhas
     const savedCampaigns = localStorage.getItem('rpg-campaigns');
     const campaigns = savedCampaigns ? JSON.parse(savedCampaigns) : [];
     
-    
-    navigate("/campaign-select"); // Vai para seleção de campanha
+    navigate("/campaign-select");
     toast.success("Login realizado com sucesso!");
-    
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -50,7 +35,7 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Login realizado com sucesso!");
-        redirectAfterLogin(); // Agora vai para campaign-select
+        redirectAfterLogin();
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -64,7 +49,6 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu email.");
-        // Para cadastro, vamos fazer login automático
         const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -84,14 +68,19 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card p-4">
       <Card className="w-full max-w-md border-2 border-primary/20 shadow-[var(--shadow-card)]">
         <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-[var(--shadow-glow)]">
-            <Dices className="w-8 h-8 text-primary-foreground" />
-          </div>
+          {/* Container do logo - imagem ocupando todo o círculo */}
+          <div className="mx-auto w-24 h-24 rounded-full border-2 border-primary/20 flex items-center justify-center overflow-hidden p-0 bg-transparent">
+  <img 
+    src="/images/logo.png" 
+    alt="Maestrum Logo" 
+    className="w-full h-full object-cover"
+  />
+</div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
-            RPG Manager
+            Maestrum
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {isLogin ? "Entre na sua campanha" : "Crie sua conta"}
+            {isLogin ? "Controle total da sua campanha." : "Crie sua conta"}
           </CardDescription>
         </CardHeader>
         <CardContent>
