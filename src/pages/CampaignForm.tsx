@@ -309,7 +309,7 @@ const CampaignForm: React.FC = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/campaigns')}
+                  onClick={() => navigate('/campaign-select')}
                   disabled={saving}
                 >
                   Cancelar

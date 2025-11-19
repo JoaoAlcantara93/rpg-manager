@@ -31,12 +31,22 @@ const CampaignSelect: React.FC = () => {
     try {
       console.log("🔄 Carregando campanhas...");
       
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error("❌ Erro de autenticação:", authError);
+        toast.error("Erro de autenticação");
+        setLoading(false);
+       
+        return;
+      }
+      
       console.log("👤 Usuário autenticado:", user);
       
       if (!user) {
-        console.log("⚠️ Nenhum usuário autenticado, usando ID temporário");
-        await loadCampaignsForUser('default-user');
+        console.log("⚠️ Nenhum usuário autenticado - redirecionando para auth");
+        toast.error("Sessão expirada. Faça login novamente.");
+        navigate('/auth');
         return;
       }
 
@@ -44,7 +54,6 @@ const CampaignSelect: React.FC = () => {
     } catch (error) {
       console.error('❌ Erro ao carregar campanhas:', error);
       toast.error("Erro ao carregar campanhas");
-    } finally {
       setLoading(false);
     }
   };
@@ -60,11 +69,20 @@ const CampaignSelect: React.FC = () => {
 
     if (error) {
       console.error("❌ Erro ao buscar campanhas:", error);
+      
+      // Se for erro de autenticação, redireciona para login
+      if (error.message.includes('auth') || error.code === 'PGRST301') {
+        toast.error("Sessão expirada. Faça login novamente.");
+        navigate('/auth');
+        return;
+      }
+      
       throw error;
     }
 
     console.log("✅ Campanhas carregadas:", data);
     setCampaigns(data || []);
+    setLoading(false);
   };
 
   const handleSelectCampaign = async (campaignId: string) => {
@@ -77,7 +95,7 @@ const CampaignSelect: React.FC = () => {
       
       toast.success("Campanha selecionada!");
       
-      // Navegar para o dashboard - CORRIGIDO: usar /dashboard
+      // Navegar para o dashboard
       console.log("🚀 Navegando para /dashboard");
       navigate('/dashboard');
       
@@ -96,21 +114,6 @@ const CampaignSelect: React.FC = () => {
     e.stopPropagation();
     console.log("✏️ Editando campanha:", campaignId);
     navigate(`/campaigns/edit/${campaignId}`);
-  };
-
-  // Testar redirecionamento
-  const testNavigation = () => {
-    console.log("🧪 Testando navegação...");
-    console.log("📍 Tentando navegar para /dashboard");
-    navigate('/dashboard');
-  };
-
-  // Função para verificar se o Dashboard existe
-  const checkDashboard = () => {
-    console.log("🔍 Verificando Dashboard...");
-    console.log("📍 Rota /dashboard existe no App.tsx");
-    console.log("📍 Tentando navegar...");
-    navigate('/dashboard');
   };
 
   if (loading) {

@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/" element={<Auth />} />
           
           {/* Autenticação */}
-          <Route path="/auth" element={<Navigate to="/campaign-select" replace />}/>
+         
           
           {/* Fluxo de Campanhas */}
           <Route path="/campaign-select" element={<CampaignSelect />} />

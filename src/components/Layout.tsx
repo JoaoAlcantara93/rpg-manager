@@ -1,3 +1,4 @@
+// src/components/Layout.tsx
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,9 +14,32 @@ const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logout realizado com sucesso!");
-    navigate("/auth");
+   /* try {
+      console.log("🚪 Iniciando logout...");
+      
+      // Limpar localStorage PRIMEIRO
+      localStorage.removeItem('current-campaign');
+      localStorage.removeItem('rpg-campaigns');
+      
+      // Fazer logout no Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("❌ Erro no signOut:", error);
+        // Mesmo com erro, continuamos com o logout local
+      }
+      
+      console.log("✅ Logout realizado, redirecionando para /auth");
+      
+      // Usar window.location.href para FORÇAR o redirecionamento
+      // Isso ignora o React Router e evita que outras lógicas interfiram
+      window.location.href = '/auth';
+      
+    } catch (error: any) {
+      console.error("❌ Erro no logout:", error);
+      // Mesmo com erro, redireciona para auth
+      window.location.href = '/auth';
+    }*/
+    navigate('/');
   };
 
   return (

@@ -338,59 +338,87 @@ const NPCs = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
-        {/* Header com botão de voltar padronizado */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleBackToDashboard}
-              className="p-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors duration-200"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                NPCs
-              </h2>
-              <p className="text-muted-foreground">Gerencie seus personagens não-jogáveis</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setDialogOpen(true)}
-              className="px-6 py-3 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Novo NPC
-            </button>
-          </div>
+  <div className="max-w-6xl mx-auto">
+    {/* Header com botão de voltar padronizado */}
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={handleBackToDashboard}
+          className="p-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors duration-200"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+            NPCs
+          </h2>
+          <p className="text-muted-foreground">Gerencie seus personagens não-jogáveis</p>
         </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setDialogOpen(true)}
+          className="px-6 py-3 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Novo NPC
+        </button>
+      </div>
+    </div>
 
-        {/* Lista de NPCs */}
-        {npcs.length === 0 ? (
-          <div className="border-2 border-dashed border-border rounded-lg bg-card/50">
-            <div className="py-12 text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Nenhum NPC criado ainda</p>
-              <button
-                onClick={() => setDialogOpen(true)}
-                className="mt-4 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center mx-auto"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Criar Primeiro NPC
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {npcs.map((npc) => (
-              <div 
-                key={npc.id} 
-                className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-lg hover:border-accent/50 transition-all shadow-lg"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-foreground truncate flex-1">{npc.name}</h3>
+    {/* Lista de NPCs */}
+    {npcs.length === 0 ? (
+      <div className="border-2 border-dashed border-border rounded-lg bg-card/50">
+        <div className="py-12 text-center">
+          <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Nenhum NPC criado ainda</p>
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center mx-auto"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Criar Primeiro NPC
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {npcs.map((npc) => (
+          <div 
+            key={npc.id} 
+            className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-lg hover:border-accent/50 transition-all shadow-lg overflow-hidden"
+          >
+            <div className="p-6">
+              <div className="flex items-start gap-4 mb-4">
+                {/* Imagem do personagem - lado esquerdo */}
+                <div className="flex-shrink-0">
+                  {npc.image_url ? (
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-border">
+                      <img 
+                        src={npc.image_url} 
+                        alt={npc.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden image-fallback w-full h-full bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center">
+                        <Users className="w-8 h-8 text-muted-foreground/40" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center border-2 border-border">
+                      <Users className="w-8 h-8 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Informações do personagem - lado direito */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-xl font-bold text-foreground truncate">{npc.name}</h3>
                     <div className="flex gap-2 ml-4">
                       <button
                         onClick={(e) => {
@@ -413,305 +441,311 @@ const NPCs = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-3 text-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">HP:</span>
-                        <span className="text-foreground">{npc.current_hp || 0}/{npc.max_hp || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">CA:</span>
-                        <span className="text-foreground">{npc.armor_class || 10}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Per:</span>
-                        <span className="text-foreground">{npc.perception || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Fort:</span>
-                        <span className="text-foreground">{npc.fortitude_save || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Ref:</span>
-                        <span className="text-foreground">{npc.reflex_save || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Von:</span>
-                        <span className="text-foreground">{npc.will_save || 0}</span>
-                      </div>                      
+                  {/* Status básicos em linha */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">HP:</span>
+                      <span className="text-foreground font-medium">{npc.current_hp || 0}/{npc.max_hp || 0}</span>
                     </div>
-
-                    {npc.observation && (
-                      <div>
-                        <p className="text-muted-foreground mb-1">Observações:</p>
-                        <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
-                          {npc.observation}
-                        </p>
-                      </div>
-                    )}
-
-                    {npc.attacks && (
-                      <div>
-                        <p className="text-muted-foreground mb-1">Ataques:</p>
-                        <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
-                          {npc.attacks}
-                        </p>
-                      </div>
-                    )}
-
-                    {npc.attributes && (
-                      <div>
-                        <p className="text-muted-foreground mb-1">Atributos:</p>
-                        <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
-                          {typeof npc.attributes === 'string' ? npc.attributes : JSON.stringify(npc.attributes, null, 2)}
-                        </p>
-                      </div>
-                    )}
-
-                    {npc.spells && (
-                      <div>
-                        <p className="text-muted-foreground mb-1">Magias:</p>
-                        <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
-                          {typeof npc.spells === 'string' ? npc.spells : JSON.stringify(npc.spells, null, 2)}
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">CA:</span>
+                      <span className="text-foreground font-medium">{npc.armor_class || 10}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">Per:</span>
+                      <span className="text-foreground font-medium">{npc.perception || 0}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Fort:</span>
+                    <span className="text-foreground">{npc.fortitude_save || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Ref:</span>
+                    <span className="text-foreground">{npc.reflex_save || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Von:</span>
+                    <span className="text-foreground">{npc.will_save || 0}</span>
+                  </div>                      
+                </div>
 
-        {/* Modal de Adicionar/Editar NPC */}
-        {dialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg border-2 border-border max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-border">
-                <h3 className="text-xl font-bold text-foreground">
-                  {editingNpc ? "Editar NPC" : "Novo NPC"}
-                </h3>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Preencha os dados do NPC
-                </p>
+                {npc.observation && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Observações:</p>
+                    <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
+                      {npc.observation}
+                    </p>
+                  </div>
+                )}
+
+                {npc.attacks && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Ataques:</p>
+                    <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
+                      {npc.attacks}
+                    </p>
+                  </div>
+                )}
+
+                {npc.attributes && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Atributos:</p>
+                    <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
+                      {typeof npc.attributes === 'string' ? npc.attributes : JSON.stringify(npc.attributes, null, 2)}
+                    </p>
+                  </div>
+                )}
+
+                {npc.spells && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Magias:</p>
+                    <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
+                      {typeof npc.spells === 'string' ? npc.spells : JSON.stringify(npc.spells, null, 2)}
+                    </p>
+                  </div>
+                )}
               </div>
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Nome */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Nome do NPC *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="Digite o nome do NPC"
-                    />
-                  </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
 
-                  {/* Status Básicos */}
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      HP Atual
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.current_hp}
-                      onChange={(e) => setFormData({ ...formData, current_hp: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="0"
-                    />
-                  </div>
+    {/* Modal de Adicionar/Editar NPC (mantido igual) */}
+    {dialogOpen && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-card rounded-lg border-2 border-border max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-border">
+            <h3 className="text-xl font-bold text-foreground">
+              {editingNpc ? "Editar NPC" : "Novo NPC"}
+            </h3>
+            <p className="text-muted-foreground text-sm mt-1">
+              Preencha os dados do NPC
+            </p>
+          </div>
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Nome */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Nome do NPC *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="Digite o nome do NPC"
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      HP Máximo
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.max_hp}
-                      onChange={(e) => setFormData({ ...formData, max_hp: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="0"
-                    />
-                  </div>
+              {/* Status Básicos */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  HP Atual
+                </label>
+                <input
+                  type="number"
+                  value={formData.current_hp}
+                  onChange={(e) => setFormData({ ...formData, current_hp: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Classe de Armadura (CA)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.armor_class}
-                      onChange={(e) => setFormData({ ...formData, armor_class: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="10"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  HP Máximo
+                </label>
+                <input
+                  type="number"
+                  value={formData.max_hp}
+                  onChange={(e) => setFormData({ ...formData, max_hp: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Percepção
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.perception}
-                      onChange={(e) => setFormData({ ...formData, perception: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="0"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Classe de Armadura (CA)
+                </label>
+                <input
+                  type="number"
+                  value={formData.armor_class}
+                  onChange={(e) => setFormData({ ...formData, armor_class: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="10"
+                />
+              </div>
 
-                  {/* Salvamentos */}
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Salvamento de Fortitude
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.fortitude_save}
-                      onChange={(e) => setFormData({ ...formData, fortitude_save: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="0"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Percepção
+                </label>
+                <input
+                  type="number"
+                  value={formData.perception}
+                  onChange={(e) => setFormData({ ...formData, perception: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Salvamento de Reflexos
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.reflex_save}
-                      onChange={(e) => setFormData({ ...formData, reflex_save: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="0"
-                    />
-                  </div>
+              {/* Salvamentos */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Salvamento de Fortitude
+                </label>
+                <input
+                  type="number"
+                  value={formData.fortitude_save}
+                  onChange={(e) => setFormData({ ...formData, fortitude_save: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Salvamento de Vontade
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.will_save}
-                      onChange={(e) => setFormData({ ...formData, will_save: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="0"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Salvamento de Reflexos
+                </label>
+                <input
+                  type="number"
+                  value={formData.reflex_save}
+                  onChange={(e) => setFormData({ ...formData, reflex_save: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
 
-                  {/* URL da Imagem */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      URL da Imagem
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="https://exemplo.com/imagem.jpg"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Salvamento de Vontade
+                </label>
+                <input
+                  type="number"
+                  value={formData.will_save}
+                  onChange={(e) => setFormData({ ...formData, will_save: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
 
-                  {/* Ataques */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Ataques
-                    </label>
-                    <textarea
-                      value={formData.attacks}
-                      onChange={(e) => setFormData({ ...formData, attacks: e.target.value })}
-                      rows={3}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="Descreva os ataques do NPC..."
-                    />
-                  </div>
+              {/* URL da Imagem */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  URL da Imagem
+                </label>
+                <input
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
+              </div>
 
-                  {/* Observações */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Observações
-                    </label>
-                    <textarea
-                      value={formData.observation}
-                      onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
-                      rows={3}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="Adicione observações sobre o NPC..."
-                    />
-                  </div>
+              {/* Ataques */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Ataques
+                </label>
+                <textarea
+                  value={formData.attacks}
+                  onChange={(e) => setFormData({ ...formData, attacks: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="Descreva os ataques do NPC..."
+                />
+              </div>
 
-                  {/* Atributos (TextArea Simples) */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Atributos
-                    </label>
-                    <textarea
-                      value={formData.attributes}
-                      onChange={(e) => setFormData({ ...formData, attributes: e.target.value })}
-                      rows={4}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="Força: 10
+              {/* Observações */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Observações
+                </label>
+                <textarea
+                  value={formData.observation}
+                  onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="Adicione observações sobre o NPC..."
+                />
+              </div>
+
+              {/* Atributos (TextArea Simples) */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Atributos
+                </label>
+                <textarea
+                  value={formData.attributes}
+                  onChange={(e) => setFormData({ ...formData, attributes: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="Força: 10
 Destreza: 12
 Constituição: 14
 Inteligência: 8
 Sabedoria: 10
 Carisma: 16"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Descreva os atributos do NPC (um por linha)
-                    </p>
-                  </div>
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Descreva os atributos do NPC (um por linha)
+                </p>
+              </div>
 
-                  {/* Magias (TextArea Simples) */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Magias
-                    </label>
-                    <textarea
-                      value={formData.spells}
-                      onChange={(e) => setFormData({ ...formData, spells: e.target.value })}
-                      rows={4}
-                      className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
-                      placeholder="Bola de Fogo
-Cura
-Proteção Divina
-Raio de Gelo"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Liste as magias do NPC (uma por linha)
-                    </p>
-                  </div>
-                </div>
-
-                {/* Botões do Formulário */}
-                <div className="flex gap-3 justify-end pt-6 border-t border-border">
-                  <button
-                    type="button"
-                    onClick={handleCloseDialog}
-                    className="px-6 py-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200"
-                  >
-                    {editingNpc ? "Atualizar NPC" : "Criar NPC"}
-                  </button>
-                </div>
-              </form>
+              {/* Magias (TextArea Simples) */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Magias
+                </label>
+                <textarea
+                  value={formData.spells}
+                  onChange={(e) => setFormData({ ...formData, spells: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-2 border-2 border-border bg-background rounded-lg focus:border-accent focus:outline-none transition-colors"
+                  placeholder="Bola de Fogo
+                                Cura
+                                Proteção Divina
+                                Raio de Gelo"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Liste as magias do NPC (uma por linha)
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+
+            {/* Botões do Formulário */}
+            <div className="flex gap-3 justify-end pt-6 border-t border-border">
+              <button
+                type="button"
+                onClick={handleCloseDialog}
+                className="px-6 py-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200"
+              >
+                {editingNpc ? "Atualizar NPC" : "Criar NPC"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </Layout>
+    )}
+  </div>
+</Layout>
   );
 };
 

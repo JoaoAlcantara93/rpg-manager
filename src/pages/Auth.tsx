@@ -15,7 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
-
+/*
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -25,7 +25,7 @@ const Auth = () => {
     };
     checkUser();
   }, [navigate]);
-
+*/
   // Função para redirecionar após login
   const redirectAfterLogin = () => {
     // Verificar se já tem campanhas
