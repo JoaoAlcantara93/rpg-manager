@@ -13,6 +13,7 @@ import Initiative from "./pages/Initiative"; // Note: importando de "Iniciative"
 import NotFound from "./pages/NotFound";
 import CampaignSelect from "./pages/CampaignSelect"; // NOVO
 import CampaignForm from "./pages/CampaignForm"; // NOVO
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,8 @@ const App = () => (
           <Route path="/npcs" element={<NPCs />} />
           <Route path="/players" element={<Players />} />
           <Route path="/initiative" element={<Initiative />} />
+          /* Landing Page*/
+          <Route path="/landingpage" element={<LandingPage />} />
           
           {/* Rota catch-all */}
           <Route path="*" element={<NotFound />} />
