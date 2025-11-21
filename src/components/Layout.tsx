@@ -39,7 +39,7 @@ const Layout = ({ children }: LayoutProps) => {
       // Mesmo com erro, redireciona para auth
       window.location.href = '/auth';
     }*/
-    navigate('/');
+    navigate('/login');
   };
 
   return (

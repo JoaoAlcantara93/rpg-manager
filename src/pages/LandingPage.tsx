@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { 
   Users, 
   Map, 
@@ -13,9 +16,12 @@ import {
   Zap,
   Heart
 } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate(); // Adicione este hook
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +30,11 @@ const LandingPage = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Função para navegar para a página de login
+  const handleGetStarted = () => {
+    navigate('/login');
+  };
 
   const features = [
     {
@@ -69,6 +80,8 @@ const LandingPage = () => {
     }
   ];
 
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
       {/* Header */}
@@ -91,7 +104,9 @@ const LandingPage = () => {
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-foreground/80 hover:text-foreground transition-colors">Recursos</a>
             <a href="#testimonials" className="text-foreground/80 hover:text-foreground transition-colors">Avaliações</a>
-            <button className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">
+            <button 
+              onClick={handleGetStarted} 
+              className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">
               Entrar
             </button>
           </nav>
@@ -119,7 +134,9 @@ const LandingPage = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button className="bg-gradient-to-r from-secondary to-accent text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg flex items-center justify-center gap-2 group">
+            <button 
+              onClick={handleGetStarted} 
+              className="bg-gradient-to-r from-secondary to-accent text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg flex items-center justify-center gap-2 group">
                 Começar Agora
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -238,9 +255,11 @@ const LandingPage = () => {
               Junte-se a milhares de mestres e transforme sua forma de jogar RPG
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-gradient-to-r from-secondary to-accent text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg flex items-center justify-center gap-2">
+              <button 
+                onClick={handleGetStarted} 
+                className="bg-gradient-to-r from-secondary to-accent text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg flex items-center justify-center gap-2">
                 <Play className="w-5 h-5" />
-                Criar Conta Gratuita
+                Criar Conta 
               </button>
               <button className="border border-border bg-card/50 px-8 py-4 rounded-lg hover:bg-card transition-colors font-medium text-lg">
                 Saber Mais

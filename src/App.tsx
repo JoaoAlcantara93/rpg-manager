@@ -25,7 +25,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Rota raiz */}
-          <Route path="/" element={<Auth />} />
+          <Route path="/" element={<LandingPage />}  />
           
           {/* Autenticação */}
          
@@ -42,7 +42,7 @@ const App = () => (
           <Route path="/players" element={<Players />} />
           <Route path="/initiative" element={<Initiative />} />
           /* Landing Page*/
-          <Route path="/landingpage" element={<LandingPage />} />
+          <Route path="/login" element={<Auth />} />
           
           {/* Rota catch-all */}
           <Route path="*" element={<NotFound />} />

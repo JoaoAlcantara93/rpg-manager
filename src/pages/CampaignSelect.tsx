@@ -237,10 +237,7 @@ const CampaignSelect: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span>0 personagens</span>
-                      </div>
+                    
                       
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -252,7 +249,9 @@ const CampaignSelect: React.FC = () => {
 
                     <div className="pt-2">
                       <Button 
-                        className="w-full bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)]"
+                        className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap w-full mt-4"
+                        
+                        
                         onClick={(e) => {
                           e.stopPropagation();
                           console.log("🎯 Botão selecionar clicado para:", campaign.id);

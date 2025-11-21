@@ -223,14 +223,14 @@ const Dashboard = () => {
       description: "Gerencie seus jogadores",
       icon: Shield,
       path: "/players",
-      gradient: "from-accent to-primary",
+      gradient: "from-secondary to-accent",
     },
     {
       title: "Combate",
       description: "Gerencie os combates",
       icon: Swords,
       path: "/initiative",
-      gradient: "from-destructive to-primary",
+      gradient: "from-secondary to-accent",
     },
   ];
 
@@ -253,7 +253,7 @@ const Dashboard = () => {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   {/* Ícone */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg flex-shrink-0">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center shadow-lg flex-shrink-0">
                     <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                   
@@ -403,7 +403,8 @@ const Dashboard = () => {
                 <Button
                   onClick={saveCampaignNotes}
                   disabled={savingNotes}
-                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-sm sm:text-base"
+                  variant="outline"
+                  className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap w-full mt-4"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {savingNotes ? "Salvando..." : "Salvar Anotações"}
