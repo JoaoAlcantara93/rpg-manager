@@ -6,7 +6,7 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Dices, Users, Swords, ListOrdered, Save, Shield, BookOpen, Settings } from "lucide-react";
+import { Dices, Users, Swords, ListOrdered, Save, Shield, BookOpen, Settings, Scroll,MapPin, User, Book } from "lucide-react";
 import { toast } from "sonner";
 
 // Interface da Campanha compatível com Supabase
@@ -221,7 +221,7 @@ const Dashboard = () => {
     {
       title: "Aventureiros",
       description: "Gerencie seus jogadores",
-      icon: Shield,
+      icon: User,
       path: "/players",
       gradient: "from-secondary to-accent",
     },
@@ -232,6 +232,27 @@ const Dashboard = () => {
       path: "/initiative",
       gradient: "from-secondary to-accent",
     },
+    {
+      title: "Mapas",
+      description: "Consule mapas",
+      icon: MapPin,
+      path: "/initiative",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "História",
+      description: "Organize enredos e missões",
+      icon: Scroll,
+      path: "/initiative",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Regras",
+      description: "Consulta os livros",
+      icon: Book,
+      path: "/initiative",
+      gradient: "from-secondary to-accent",
+    }
   ];
 
   return (
