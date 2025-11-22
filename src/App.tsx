@@ -10,6 +10,10 @@ import Dice from "./pages/Dice";
 import NPCs from "./pages/NPCs"; // Note: importando de "Npcs" (com N maiúsculo)
 import Players from "./pages/Players";
 import Initiative from "./pages/Initiative"; // Note: importando de "Iniciative"
+import HistoryRPG from "./pages/HistoryRPG"; // Note: importando de "Iniciative"
+import MapManager from "./pages/MapManager"; // Note: importando de "Iniciative"
+import RulesRpg from "./pages/RulesRPG"; // Note: importando de "Iniciative"
+
 import NotFound from "./pages/NotFound";
 import CampaignSelect from "./pages/CampaignSelect"; // NOVO
 import CampaignForm from "./pages/CampaignForm"; // NOVO
@@ -41,6 +45,10 @@ const App = () => (
           <Route path="/npcs" element={<NPCs />} />
           <Route path="/players" element={<Players />} />
           <Route path="/initiative" element={<Initiative />} />
+          <Route path="/history" element={<HistoryRPG />} />
+          <Route path="/mapmanager" element={<MapManager/>} />
+          <Route path="/rules" element={<RulesRpg />} />
+          
           /* Landing Page*/
           <Route path="/login" element={<Auth />} />
           

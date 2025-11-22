@@ -30,7 +30,7 @@ const Dashboard = () => {
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
-    console.log("🏠 Dashboard montado");
+    //console.log("🏠 Dashboard montado");
     checkAuthAndLoadData();
   }, [navigate]);
 
@@ -44,7 +44,7 @@ const Dashboard = () => {
       
       // Verificar se tem campanha selecionada
       const currentCampaignId = localStorage.getItem('current-campaign');
-      console.log("📋 Campaign ID do localStorage:", currentCampaignId);
+      //console.log("📋 Campaign ID do localStorage:", currentCampaignId);
       
       if (!currentCampaignId) {
         console.log("❌ Nenhuma campanha selecionada");
@@ -66,7 +66,7 @@ const Dashboard = () => {
 
   const loadCurrentCampaign = async (campaignId: string) => {
     try {
-      console.log("🔄 Carregando campanha do Supabase:", campaignId);
+      //console.log("🔄 Carregando campanha do Supabase:", campaignId);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -99,17 +99,17 @@ const Dashboard = () => {
       }
 
       if (data) {
-        console.log("✅ Campanha carregada:", data);
+        //console.log("✅ Campanha carregada:", data);
         setCurrentCampaign(data);
         toast.success(`Bem-vindo à campanha: ${data.name}`);
       } else {
-        console.log("❌ Nenhuma campanha encontrada");
+        //console.log("❌ Nenhuma campanha encontrada");
         toast.error("Campanha não encontrada");
         navigate('/campaign-select');
       }
 
     } catch (error) {
-      console.error('❌ Erro inesperado:', error);
+      //console.error('❌ Erro inesperado:', error);
       toast.error("Erro ao carregar campanha");
       navigate('/campaign-select');
     }
@@ -121,7 +121,7 @@ const Dashboard = () => {
       if (!user) return;
 
       // Primeiro verificar se a tabela campaign_notes existe
-      console.log("📝 Carregando anotações...");
+      //console.log("📝 Carregando anotações...");
       
       const { data, error } = await supabase
         .from('campaign_notes')
@@ -135,10 +135,8 @@ const Dashboard = () => {
       }
 
       if (data) {
-        console.log("✅ Anotações carregadas");
+       // console.log("✅ Anotações carregadas");
         setCampaignNotes(data.notes);
-      } else {
-        console.log("ℹ️ Nenhuma anotação encontrada");
       }
     } catch (error: any) {
       console.error('❌ Erro ao carregar anotações:', error);
@@ -236,21 +234,21 @@ const Dashboard = () => {
       title: "Mapas",
       description: "Consule mapas",
       icon: MapPin,
-      path: "/initiative",
+      path: "/mapsmanager",
       gradient: "from-secondary to-accent",
     },
     {
       title: "História",
       description: "Organize enredos e missões",
       icon: Scroll,
-      path: "/initiative",
+      path: "/history",
       gradient: "from-secondary to-accent",
     },
     {
       title: "Regras",
       description: "Consulta os livros",
       icon: Book,
-      path: "/initiative",
+      path: "/rules",
       gradient: "from-secondary to-accent",
     }
   ];
@@ -270,7 +268,7 @@ const Dashboard = () => {
           </div>
           
           {currentCampaign && (
-            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+            <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   {/* Ícone */}
@@ -304,7 +302,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate('/campaign-select')}
-                    className="border-2 border-border hover:border-primary/50 whitespace-nowrap w-full sm:w-auto mt-4 sm:mt-0"
+                    className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap "
                     size="sm"
                   >
                     <Settings className="w-4 h-4 mr-2" />

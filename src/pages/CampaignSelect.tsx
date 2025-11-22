@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Calendar, Dice1, BookOpen } from "lucide-react";
+import { Plus, Users, Calendar, Dice1, BookOpen,Settings } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,9 +28,7 @@ const CampaignSelect: React.FC = () => {
   }, []);
 
   const loadCampaigns = async () => {
-    try {
-      console.log("🔄 Carregando campanhas...");
-      
+    try {          
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
@@ -41,7 +39,7 @@ const CampaignSelect: React.FC = () => {
         return;
       }
       
-      console.log("👤 Usuário autenticado:", user);
+      //console.log("👤 Usuário autenticado:", user);
       
       if (!user) {
         console.log("⚠️ Nenhum usuário autenticado - redirecionando para auth");
@@ -59,7 +57,7 @@ const CampaignSelect: React.FC = () => {
   };
 
   const loadCampaignsForUser = async (userId: string) => {
-    console.log("📋 Buscando campanhas para usuário:", userId);
+    //console.log("📋 Buscando campanhas para usuário:", userId);
     
     const { data, error } = await supabase
       .from('campaigns')
@@ -80,23 +78,23 @@ const CampaignSelect: React.FC = () => {
       throw error;
     }
 
-    console.log("✅ Campanhas carregadas:", data);
+    //console.log("✅ Campanhas carregadas:", data);
     setCampaigns(data || []);
     setLoading(false);
   };
 
   const handleSelectCampaign = async (campaignId: string) => {
-    console.log("🎯 Selecionando campanha:", campaignId);
+   // console.log("🎯 Selecionando campanha:", campaignId);
     
     try {
       // Salvar no localStorage
       localStorage.setItem('current-campaign', campaignId);
-      console.log("💾 Campanha salva no localStorage:", campaignId);
+      //console.log("💾 Campanha salva no localStorage:", campaignId);
       
       toast.success("Campanha selecionada!");
       
       // Navegar para o dashboard
-      console.log("🚀 Navegando para /dashboard");
+     // console.log("🚀 Navegando para /dashboard");
       navigate('/dashboard');
       
     } catch (error) {
@@ -180,7 +178,7 @@ const CampaignSelect: React.FC = () => {
               </div>
               <Button
                 onClick={handleCreateCampaign}
-                className="bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)]"
+                className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap  mt-4"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Campanha
@@ -218,11 +216,11 @@ const CampaignSelect: React.FC = () => {
                       </div>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={(e) => handleEditCampaign(e, campaign.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 hover:bg-transparent"
                       >
-                        Editar
+                        <Settings className="w-4 h-4" />
                       </Button>
                     </div>
                     <CardTitle className="text-xl line-clamp-2">{campaign.name}</CardTitle>
@@ -249,7 +247,7 @@ const CampaignSelect: React.FC = () => {
 
                     <div className="pt-2">
                       <Button 
-                        className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap w-full mt-4"
+                        className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium w-full"
                         
                         
                         onClick={(e) => {

@@ -122,7 +122,7 @@ const Auth = () => {
             </div>
             <Button
               type="submit"
-              className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap w-full mt-4"
+              className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium w-full"
               disabled={loading}
             >
               {loading ? "Carregando..." : isLogin ? "Entrar" : "Cadastrar"}
@@ -132,7 +132,9 @@ const Auth = () => {
             <Button
               variant="ghost"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-muted-foreground hover:text-secondary"
+              className="text-muted-foreground group-hover:text-transparent 
+                          
+                         group-hover:bg-clip-text transition-all duration-300 w-full"
             >
               {isLogin ? "Não tem conta? Cadastre-se" : "Já tem conta? Entre"}
             </Button>

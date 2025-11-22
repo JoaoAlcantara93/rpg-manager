@@ -14,7 +14,9 @@ import {
   Play,
   Shield,
   Zap,
-  Heart
+  Heart,
+  Instagram,
+  MessageCircle,
 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -86,32 +88,41 @@ const LandingPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
       {/* Header */}
       <header className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-card/80' : 'bg-card/50'
-      }`}>
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full border-2 border-primary/20 flex items-center justify-center overflow-hidden bg-transparent">
-              <img 
-                src="/images/logo.png" 
-                alt="Maestrum Logo" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
-              Maestrum
-            </h1>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-foreground/80 hover:text-foreground transition-colors">Recursos</a>
-            <a href="#testimonials" className="text-foreground/80 hover:text-foreground transition-colors">Avaliações</a>
-            <button 
-              onClick={handleGetStarted} 
-              className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">
-              Entrar
-            </button>
-          </nav>
-        </div>
-      </header>
+  isScrolled ? 'bg-card/80' : 'bg-card/50'
+}`}>
+  <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full border-2 border-primary/20 flex items-center justify-center overflow-hidden bg-transparent">
+        <img 
+          src="/images/logo.png" 
+          alt="Maestrum Logo" 
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+        Maestrum
+      </h1>
+    </div>
+
+    {/* Navegação Desktop */}
+    <nav className="hidden md:flex items-center gap-6">
+      <a href="#features" className="text-foreground/80 hover:text-foreground transition-colors">Recursos</a>
+      <a href="#testimonials" className="text-foreground/80 hover:text-foreground transition-colors">Avaliações</a>
+      <button 
+        onClick={handleGetStarted} 
+        className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">
+        Entrar
+      </button>
+    </nav>
+
+    {/* Botão Entrar Mobile - Apenas o botão principal */}
+    <button 
+      onClick={handleGetStarted} 
+      className="md:hidden bg-gradient-to-r from-secondary to-accent text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium text-sm">
+      Entrar
+    </button>
+  </div>
+</header>
 
       {/* Hero Section - Layout Específico */}
       <section className="container mx-auto px-4 py-16 md:py-24">
@@ -271,15 +282,42 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer className="border-t border-border bg-card/50 py-12">
-        <div className="container mx-auto px-4 text-center" >
-          <br/>
-          <div>
-            <p className="text-xl text-foreground/60 mb-8 text-center">
-                © 2025 Maestrum. Todos os direitos reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
+  <div className="container mx-auto px-4">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      {/* Copyright */}
+      <div className="text-center md:text-left">
+        <p className="text-foreground/60">
+          © 2025 Maestrum. Todos os direitos reservados.
+        </p>
+      </div>
+
+      {/* Redes Sociais - WhatsApp e Instagram */}
+      <div className="flex items-center gap-4">
+        {/* WhatsApp */}
+        <a 
+          href="https://wa.me/5511999999999" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-10 h-10 rounded-full bg-foreground/10 hover:bg-green-500/20 hover:text-green-400 transition-all duration-300 flex items-center justify-center group"
+          aria-label="WhatsApp"
+        >
+          <MessageCircle className="w-5 h-5" />
+        </a>
+
+        {/* Instagram */}
+        <a 
+          href="https://instagram.com/maestrum" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-10 h-10 rounded-full bg-foreground/10 hover:bg-pink-500/20 hover:text-pink-400 transition-all duration-300 flex items-center justify-center group"
+          aria-label="Instagram"
+        >
+          <Instagram className="w-5 h-5" />
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
     </div>
   );
 };
