@@ -149,7 +149,7 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      console.log("💾 Salvando anotações...");
+      //console.log("💾 Salvando anotações...");
 
       const { error } = await supabase
         .from('campaign_notes')
@@ -234,21 +234,21 @@ const Dashboard = () => {
       title: "Mapas",
       description: "Consule mapas",
       icon: MapPin,
-      path: "/mapsmanager",
+      path: "*",
       gradient: "from-secondary to-accent",
     },
     {
       title: "História",
       description: "Organize enredos e missões",
       icon: Scroll,
-      path: "/history",
+      path: "/*",
       gradient: "from-secondary to-accent",
     },
     {
       title: "Regras",
       description: "Consulta os livros",
       icon: Book,
-      path: "/rules",
+      path: "/*",
       gradient: "from-secondary to-accent",
     }
   ];
@@ -361,12 +361,14 @@ const Dashboard = () => {
                   {/* Botões de Dados */}
                   <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                     {[
-                      { dice: '1d20', label: '1d20' },
+                      
+                      { dice: '1d4', label: '1d4' },
                       { dice: '1d6', label: '1d6' },
                       { dice: '1d8', label: '1d8' },
-                      { dice: '1d100', label: '1d100' },
-                      { dice: '1d4', label: '1d4' },
                       { dice: '1d12', label: '1d12' },
+                      { dice: '1d20', label: '1d20' },
+                      { dice: '1d100', label: '1d100' },
+                                           
                     ].map(({ dice, label }) => (
                       <Button
                         key={dice}

@@ -9,11 +9,10 @@ import Dashboard from "./pages/Dashboard";
 import Dice from "./pages/Dice";
 import NPCs from "./pages/NPCs"; // Note: importando de "Npcs" (com N maiúsculo)
 import Players from "./pages/Players";
-import Initiative from "./pages/Initiative"; // Note: importando de "Iniciative"
-import HistoryRPG from "./pages/HistoryRPG"; // Note: importando de "Iniciative"
-import MapManager from "./pages/MapManager"; // Note: importando de "Iniciative"
-import RulesRpg from "./pages/RulesRPG"; // Note: importando de "Iniciative"
-
+import Initiative from "./pages/Initiative"; 
+import HistoryRPG from "./pages/HistoryRPG"; 
+import MapManager from "./pages/MapManager"; 
+import RulesRpg from "./pages/RulesRPG"; 
 import NotFound from "./pages/NotFound";
 import CampaignSelect from "./pages/CampaignSelect"; // NOVO
 import CampaignForm from "./pages/CampaignForm"; // NOVO
