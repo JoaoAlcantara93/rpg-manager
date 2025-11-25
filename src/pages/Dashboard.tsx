@@ -241,7 +241,7 @@ const Dashboard = () => {
       title: "História",
       description: "Organize enredos e missões",
       icon: Scroll,
-      path: "/*",
+      path: "/history",
       gradient: "from-secondary to-accent",
     },
     {

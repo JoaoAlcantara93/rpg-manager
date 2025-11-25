@@ -45,6 +45,7 @@ const App = () => (
           <Route path="/players" element={<Players />} />
           <Route path="/initiative" element={<Initiative />} />
           <Route path="/history" element={<HistoryRPG />} />
+          
           <Route path="/mapmanager" element={<MapManager/>} />
           <Route path="/rules" element={<RulesRpg />} />
           
