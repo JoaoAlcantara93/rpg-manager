@@ -10,7 +10,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Trash2, Search, ArrowLeft, X, Edit, BookOpen, Clock, MapPin, Eye, EyeOff, Users, User, Book, Scroll, Swords } from "lucide-react";
+import { Plus, Trash2, Search, ArrowLeft, X, Edit, BookOpen, Clock, MapPin, Eye, EyeOff, Users, User, Book, Scroll, Swords ,MoreHorizontal} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 interface CampaignNote {
   id: string;
@@ -421,13 +429,7 @@ const HistoryRPG = () => {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button 
-                  className="bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground"
-                  disabled={!selectedCampaignId}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Anotação
-                </Button>
+                
               </DialogTrigger>
               <DialogContent className="bg-card border-2 border-border max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
@@ -632,77 +634,85 @@ const HistoryRPG = () => {
                       }`}
                     >
                       <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${getNoteTypeColor(note.note_type)}`}>
-                              {getNoteIcon(note.note_type)}
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-lg flex items-center gap-2">
-                                {note.title}
-                                {note.is_archived && (
-                                  <Badge variant="outline" className="bg-gray-500/20 text-gray-600 border-gray-500">
-                                    Arquivada
-                                  </Badge>
-                                )}
-                              </h3>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <Badge variant="outline" className={getNoteTypeColor(note.note_type)}>
-                                  {getNoteTypeLabel(note.note_type)}
-                                </Badge>
-                                {getSessionInfo(note) && (
-                                  <span>{getSessionInfo(note)}</span>
-                                )}
-                                <span>
-                                  {new Date(note.updated_at).toLocaleDateString('pt-BR')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+  <div className="flex items-start justify-between mb-4">
+    <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className={`p-2 rounded-lg ${getNoteTypeColor(note.note_type)} flex-shrink-0`}>
+        {getNoteIcon(note.note_type)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="font-bold text-lg flex items-center gap-2 truncate">
+          {note.title}
+          {note.is_archived && (
+            <Badge variant="outline" className="bg-gray-500/20 text-gray-600 border-gray-500 flex-shrink-0">
+              Arquivada
+            </Badge>
+          )}
+        </h3>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="outline" className={getNoteTypeColor(note.note_type)}>
+            {getNoteTypeLabel(note.note_type)}
+          </Badge>
+          {getSessionInfo(note) && (
+            <span className="truncate">{getSessionInfo(note)}</span>
+          )}
+          <span className="flex-shrink-0">
+            {new Date(note.updated_at).toLocaleDateString('pt-BR')}
+          </span>
+        </div>
+      </div>
+    </div>
 
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(note)}
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Editar
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleArchive(note)}
-                            >
-                              {note.is_archived ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
-                              {note.is_archived ? "Desarquivar" : "Arquivar"}
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(note.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
+    {/* Menu Dropdown */}
+    <div className="flex-shrink-0 ml-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">Abrir menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => handleEdit(note)}>
+            <Edit className="w-4 h-4 mr-2" />
+            Editar
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleArchive(note)}>
+            {note.is_archived ? (
+              <Eye className="w-4 h-4 mr-2" />
+            ) : (
+              <EyeOff className="w-4 h-4 mr-2" />
+            )}
+            {note.is_archived ? "Desarquivar" : "Arquivar"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => handleDelete(note.id)}
+            className="text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  </div>
 
-                        <div className="prose prose-sm max-w-none mb-4">
-                          <p className="text-muted-foreground line-clamp-3">
-                            {note.notes}
-                          </p>
-                        </div>
+  <div className="prose prose-sm max-w-none mb-4">
+    <p className="text-muted-foreground line-clamp-3">
+      {note.notes}
+    </p>
+  </div>
 
-                        {note.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {note.tags.map(tag => (
-                              <Badge key={tag} variant="secondary">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
+  {note.tags.length > 0 && (
+    <div className="flex flex-wrap gap-2">
+      {note.tags.map(tag => (
+        <Badge key={tag} variant="secondary">
+          {tag}
+        </Badge>
+      ))}
+    </div>
+  )}
+</CardContent>
                     </Card>
                   ))}
 
@@ -772,9 +782,26 @@ const HistoryRPG = () => {
                     <div className="text-sm text-muted-foreground">Tags Únicas</div>
                   </div>
                 </div>
+                
+                {/* BOTÃO FORA DO GRID - Aqui é o lugar correto */}
+                <Dialog open={dialogOpen} onOpenChange={(open) => {
+                  setDialogOpen(open);
+                  if (!open) resetForm();
+                }}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-secondary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground"
+                      disabled={!selectedCampaignId}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nova Anotação
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </CardContent>
             </Card>
           )}
+          
 
           {/* Card Dashboard */}
           <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
