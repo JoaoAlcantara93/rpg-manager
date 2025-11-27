@@ -39,7 +39,7 @@ const App = () => (
           <Route path="/campaigns/edit/:id" element={<CampaignForm />} />
           
           {/* Funcionalidades principais */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<HistoryRPG />} />
           <Route path="/dice" element={<Dice />} />
           <Route path="/npcs" element={<NPCs />} />
           <Route path="/players" element={<Players />} />
@@ -54,6 +54,7 @@ const App = () => (
           
           {/* Rota catch-all */}
           <Route path="*" element={<NotFound />} />
+          <Route element={<Error />} path="*" />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

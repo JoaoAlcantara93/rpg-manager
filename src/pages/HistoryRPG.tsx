@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Trash2, Search, ArrowLeft, X, Edit, BookOpen, Clock, MapPin, Eye, EyeOff, Users } from "lucide-react";
+import { Plus, Trash2, Search, ArrowLeft, X, Edit, BookOpen, Clock, MapPin, Eye, EyeOff, Users, User, Book, Scroll, Swords } from "lucide-react";
 
 interface CampaignNote {
   id: string;
@@ -343,6 +343,44 @@ const HistoryRPG = () => {
       </Layout>
     );
   }
+  const menuItems = [
+    {
+      title: "NPCs",
+      description: "Gerencie seus NPCs",
+      icon: Users,
+      path: "/npcs",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Aventureiros",
+      description: "Gerencie seus jogadores",
+      icon: User,
+      path: "/players",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Combate",
+      description: "Gerencie os combates",
+      icon: Swords,
+      path: "/initiative",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Mapas",
+      description: "Consule mapas",
+      icon: MapPin,
+      path: "*",
+      gradient: "from-secondary to-accent",
+    },   
+    {
+      title: "Regras",
+      description: "Em desenvolvimento - Em breve!", 
+      icon: Book,
+      path: "#",
+      gradient: "from-secondary to-accent", 
+      disabled: true
+    },
+  ];
 
   if (error) {
     return (
@@ -369,17 +407,10 @@ const HistoryRPG = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleBackToDashboard}
-                className="border-2 border-border hover:bg-accent/20"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
+             
               <div>
                 <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                  HistoryRPG
+                  Bem-vindo, Mestre!
                 </h2>
                 <p className="text-muted-foreground">Registro completo das suas aventuras</p>
               </div>
@@ -519,37 +550,8 @@ const HistoryRPG = () => {
             </Dialog>
           </div>
 
-          {/* Seletor de Campanha */}
-          <Card className="border-2 border-border mb-6">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-muted-foreground" />
-                  <Label htmlFor="campaign-select" className="text-sm font-medium">
-                    Campanha:
-                  </Label>
-                </div>
-                <select
-                  id="campaign-select"
-                  value={selectedCampaignId}
-                  onChange={(e) => handleCampaignChange(e.target.value)}
-                  className="flex-1 p-2 border border-border rounded-md bg-background"
-                >
-                  <option value="">Selecione uma campanha</option>
-                  {campaigns.map((campaign) => (
-                    <option key={campaign.id} value={campaign.id}>
-                      {campaign.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {selectedCampaign && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  {selectedCampaign.description}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+     
+         
 
           {selectedCampaignId ? (
             <>
@@ -774,6 +776,42 @@ const HistoryRPG = () => {
             </Card>
           )}
 
+          {/* Card Dashboard */}
+          <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
+              <CardHeader>
+                <CardTitle>Acesso Rápido</CardTitle>
+              </CardHeader>
+            {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Card
+                    key={item.path}
+                    className="card-pergaminho cursor-pointer transition-all duration-300 hover:scale-105 border hover:border-primary/30"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <CardHeader className="p-2 sm:p-3 relative z-10">
+                      <div className="flex items-center gap-2">
+                        {/* Ícone bem pequeno */}
+                        <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10 flex-shrink-0`}>
+                          <Icon className="w-4 h-4 text-white" />
+                        </div>
+                        
+                        {/* Textos bem compactos */}
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-sm font-bold leading-tight">
+                            {item.title}
+                          </CardTitle>
+                          <CardDescription className="text-muted-foreground/90 text-xs leading-tight line-clamp-1">
+                            {item.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                  );
+                })}
+          </Card>
+
           {/* Última Sessão */}
           {lastSession && (
             <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
@@ -802,6 +840,7 @@ const HistoryRPG = () => {
       </div>
     </Layout>
   );
+  
 };
 
 export default HistoryRPG;
