@@ -106,7 +106,7 @@ const Initiative = () => {
     }
     
     setLastRoll({ dice, result });
-    toast.success(`🎲 ${dice}: ${result}`);
+    
   };
 
   // Efeito para controlar o timer
@@ -423,7 +423,7 @@ const Initiative = () => {
     },
     {
       title: "Anotações",
-      description: "Gerencie os combates",
+      description: "Gerencie suas anotações",
       icon: BookOpen,
       path: "/dashboard",
       gradient: "from-secondary to-accent",

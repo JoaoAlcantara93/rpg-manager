@@ -92,7 +92,7 @@ const HistoryRPG = () => {
     }
     
     setLastRoll({ dice, result });
-    toast.success(`🎲 ${dice}: ${result}`);
+   
   };
 
   useEffect(() => {

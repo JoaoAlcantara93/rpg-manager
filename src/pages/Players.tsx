@@ -1,10 +1,11 @@
 // src/pages/Players.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users,User, Swords, BookOpen, MapPin, Book  } from "lucide-react";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Player {
   id: string;
@@ -49,6 +50,45 @@ const Players = () => {
     notes: "",
     observation: ""
   });
+
+  const menuItems = [
+    {
+      title: "NPCs",
+      description: "Gerencie seus NPCs",
+      icon: Users,
+      path: "/npcs",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Anotações",
+      description: "Gerencie suas anotações",
+      icon: BookOpen,
+      path: "/dashboard",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Combate",
+      description: "Gerencie os combates",
+      icon: Swords,
+      path: "/initiative",
+      gradient: "from-secondary to-accent",
+    },
+    {
+      title: "Mapas",
+      description: "Consule mapas",
+      icon: MapPin,
+      path: "*",
+      gradient: "from-secondary to-accent",
+    },   
+    {
+      title: "Regras",
+      description: "Em desenvolvimento - Em breve!", 
+      icon: Book,
+      path: "#",
+      gradient: "from-secondary to-accent", 
+      disabled: true
+    },
+  ];
 
   useEffect(() => {
     const campaignId = localStorage.getItem('current-campaign');
@@ -314,153 +354,194 @@ const Players = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
-        {/* Header com botão de voltar padronizado */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Conteúdo principal */}
+        <div className="lg:col-span-3">
+          {/* Header com botão de voltar padronizado */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">              
+              <div>
+                <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                  Aventureiros
+                </h2>
+                <p className="text-muted-foreground">Gerencie seus personagens jogáveis</p>
+              </div>
+            </div>
             <button
-              onClick={handleBackToDashboard}
-              className="p-2 border-2 border-border hover:bg-accent/20 rounded-lg transition-colors duration-200"
+              onClick={() => setDialogOpen(true)}
+             className="px-6 py-3 bg-gradient-to-r from-secondary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <Plus className="w-5 h-5 mr-2" />
+              Novo Aventureiro
             </button>
-            <div>
-              <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                Aventureiros
-              </h2>
-              <p className="text-muted-foreground">Gerencie seus personagens jogáveis</p>
-            </div>
+           
           </div>
-          <button
-            onClick={() => setDialogOpen(true)}
-            className="px-6 py-3 bg-gradient-to-r from-accent to-primary hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Novo Aventureiro
-          </button>
-        </div>
-
-        {/* Lista de Players */}
-        {players.length === 0 ? (
-          <div className="border-2 border-dashed border-border rounded-lg bg-card/50">
-            <div className="py-12 text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Nenhum aventureiro criado ainda</p>
-              <button
-                onClick={() => setDialogOpen(true)}
-                className="mt-4 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center mx-auto"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Criar Primeiro Aventureiro
-              </button>
+          
+            
+          {/* Lista de Players */}
+          {players.length === 0 ? (
+            <div className="border-2 border-dashed border-border rounded-lg bg-card/50">
+              <div className="py-12 text-center">
+                <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">Nenhum aventureiro criado ainda</p>
+                <button
+                  onClick={() => setDialogOpen(true)}
+                  className="mt-4 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center mx-auto"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Criar Primeiro Aventureiro
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {players.map((player) => (
-              <div 
-                key={player.id} 
-                className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-lg hover:border-accent/50 transition-all shadow-lg"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-foreground truncate flex-1">{player.name}</h3>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(player);
-                        }}
-                        className="p-2 text-muted-foreground hover:text-accent hover:bg-accent/20 rounded-lg transition-colors"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(player.id);
-                        }}
-                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/20 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {players.map((player) => (
+                <div 
+                  key={player.id} 
+                  className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-lg hover:border-accent/50 transition-all shadow-lg"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-foreground truncate flex-1">{player.name}</h3>
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(player);
+                          }}
+                          className="p-2 text-muted-foreground hover:text-accent hover:bg-accent/20 rounded-lg transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(player.id);
+                          }}
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/20 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Informações básicas */}
-                  <div className="space-y-2 mb-4">
-                    {player.character_class && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">Classe:</span>
-                        <span className="text-foreground font-medium">{player.character_class}</span>
-                      </div>
-                    )}
-                    {player.level && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">Nível:</span>
-                        <span className="text-foreground font-medium">{player.level}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-3 text-sm">
-                    {/* Status Básicos */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">HP:</span>
-                        <span className="text-foreground">{player.hp_current || 0}/{player.hp_max || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">CA:</span>
-                        <span className="text-foreground">{player.ac || 10}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Per:</span>
-                        <span className="text-foreground">{player.perception || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Fort:</span>
-                        <span className="text-foreground">{player.fortitude_save || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Ref:</span>
-                        <span className="text-foreground">{player.reflex_save || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Von:</span>
-                        <span className="text-foreground">{player.will_save || 0}</span>
-                      </div>                     
+                    
+                    {/* Informações básicas */}
+                    <div className="space-y-2 mb-4">
+                      {player.character_class && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Classe:</span>
+                          <span className="text-foreground font-medium">{player.character_class}</span>
+                        </div>
+                      )}
+                      {player.level && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Nível:</span>
+                          <span className="text-foreground font-medium">{player.level}</span>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Observações */}
-                    {player.observation && (
-                      <div>
-                        <p className="text-muted-foreground mb-1">Observações:</p>
-                        <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
-                          {player.observation}
-                        </p>
+                    
+                    <div className="space-y-3 text-sm">
+                      {/* Status Básicos */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">HP:</span>
+                          <span className="text-foreground">{player.hp_current || 0}/{player.hp_max || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">CA:</span>
+                          <span className="text-foreground">{player.ac || 10}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Per:</span>
+                          <span className="text-foreground">{player.perception || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Fort:</span>
+                          <span className="text-foreground">{player.fortitude_save || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Ref:</span>
+                          <span className="text-foreground">{player.reflex_save || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Von:</span>
+                          <span className="text-foreground">{player.will_save || 0}</span>
+                        </div>                     
                       </div>
-                    )}
+  
+                      {/* Observações */}
+                      {player.observation && (
+                        <div>
+                          <p className="text-muted-foreground mb-1">Observações:</p>
+                          <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
+                            {player.observation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+  
+       {/* Sidebar com Acesso Rápido - CORRIGIDO PARA O PADRÃO DOS OUTROS */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-4 space-y-4">
+            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
+              <CardHeader>
+                <CardTitle>Acesso Rápido</CardTitle>
+              </CardHeader>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Card
+                    key={item.path}
+                    className="card-pergaminho cursor-pointer transition-all duration-300 hover:scale-105 border hover:border-primary/30"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <CardHeader className="p-2 sm:p-3 relative z-10">
+                      <div className="flex items-center gap-2">
+                        {/* Ícone bem pequeno */}
+                        <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10 flex-shrink-0`}>
+                          <Icon className="w-4 h-4 text-white" />
+                        </div>
+                        
+                        {/* Textos bem compactos */}
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-sm font-bold leading-tight">
+                            {item.title}
+                          </CardTitle>
+                          <CardDescription className="text-muted-foreground/90 text-xs leading-tight line-clamp-1">
+                            {item.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+            </Card>
           </div>
-        )}
-
-        {/* Modal de Adicionar/Editar Player */}
-        {dialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-border">
-                <h3 className="text-xl font-bold text-foreground">
-                  {editingPlayer ? "Editar Aventureiro" : "Novo Aventureiro"}
-                </h3>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Preencha os dados do aventureiro
-                </p>
-              </div>
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        </div>
+        </div>
+  
+      {/* Modal de Adicionar/Editar Player */}
+      {dialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-border">
+              <h3 className="text-xl font-bold text-foreground">
+                {editingPlayer ? "Editar Aventureiro" : "Novo Aventureiro"}
+              </h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Preencha os dados do aventureiro
+              </p>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+  
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
@@ -632,7 +713,7 @@ const Players = () => {
             </div>
           </div>
         )}
-      </div>
+      
     </Layout>
   );
 };
