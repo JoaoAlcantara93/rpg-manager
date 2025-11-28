@@ -22,18 +22,6 @@ interface InitiativeCharacter {
   notes: string;
   character_type: 'player' | 'npc';
   statuses: CharacterStatus[];
-  
-  campaign_id?: string;
-  source_character_id?: string;
-}
-
-// Adicione estas interfaces para os personagens de origem
-interface BaseCharacter {
-  id: string;
-  name: string;
-  current_hp?: number | null;
-  max_hp?: number | null;
-  armor_class?: number | null;
 }
 
 interface CharacterStatus {
@@ -45,22 +33,6 @@ interface CharacterStatus {
   };
   duration?: number;
   notes: string;
-}
-
-
-interface PlayerCharacter extends BaseCharacter {
-  character_class?: string | null;
-  level?: number | null;
-  // outros campos específicos de players...
-}
-
-interface NpcCharacter extends BaseCharacter {
-  fortitude_save?: number | null;
-  reflex_save?: number | null;
-  will_save?: number | null;
-  perception?: number | null;
-  attacks?: string | null;
-  // outros campos específicos de npcs...
 }
 
 interface StatusType {
@@ -96,13 +68,8 @@ const Initiative = () => {
   const [timerActive, setTimerActive] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Estado para rolagem de dados
+  // Adicione este estado para o último roll
   const [lastRoll, setLastRoll] = useState<LastRoll | null>(null);
-  
-  // NOVOS ESTADOS - MOVER PARA DENTRO DO COMPONENTE ↓
-  const [availableCharacters, setAvailableCharacters] = useState<(PlayerCharacter | NpcCharacter)[]>([]);
-  const [loadingCharacters, setLoadingCharacters] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -112,7 +79,6 @@ const Initiative = () => {
     armor_class: 10,
     notes: "",
     character_type: "player" as 'player' | 'npc',
-    source_character_id: "", // ← NOVO: ID do personagem de origem
   });
   
   const [statusFormData, setStatusFormData] = useState({
@@ -120,54 +86,6 @@ const Initiative = () => {
     duration: 0,
     notes: "",
   });
-
-
-  const fetchAvailableCharacters = async (type: 'player' | 'npc') => {
-    try {
-      setLoadingCharacters(true);
-      const campaignId = localStorage.getItem('current-campaign');
-      
-      if (!campaignId) {
-        toast.error("Nenhuma campanha selecionada");
-        return;
-      }
-  
-      if (type === 'player') {
-        const { data, error } = await supabase
-          .from('players')
-          .select('id, name, hp_current, hp_max, ac')
-          .eq('campaign_id', campaignId)
-          .order('name');
-  
-        if (error) throw error;
-        
-        // Mapear os campos manualmente
-        const mappedData = (data || []).map(player => ({
-          id: player.id,
-          name: player.name,
-          current_hp: player.hp_current,
-          max_hp: player.hp_max,
-          armor_class: player.ac
-        }));
-        
-        setAvailableCharacters(mappedData);
-      } else {
-        const { data, error } = await supabase
-          .from('npcs')
-          .select('id, name, current_hp, max_hp, armor_class')
-          .eq('campaign_id', campaignId)
-          .order('name');
-  
-        if (error) throw error;
-        setAvailableCharacters(data || []);
-      }
-    } catch (error: any) {
-      console.error("Erro ao buscar personagens:", error);
-      toast.error("Erro ao buscar personagens");
-    } finally {
-      setLoadingCharacters(false);
-    }
-  };
 
   // Adicione a função rollDice completa
   const rollDice = (dice: string) => {
@@ -370,58 +288,19 @@ const Initiative = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
-  
-      const campaignId = localStorage.getItem('current-campaign');
-      if (!campaignId) {
-        toast.error("Nenhuma campanha selecionada");
-        return;
-      }
-  
-      const entriesToAdd = [];
-      const baseName = formData.name;
-      const currentPosition = characters.length;
-      
-      // Se for múltiplas cópias de um template
-      if (quantity > 1 && formData.character_type !== 'manual' && formData.source_character_id) {
-        for (let i = 1; i <= quantity; i++) {
-          entriesToAdd.push({
-            name: `${baseName} ${i}`,
-            initiative_value: formData.initiative_value,
-            current_hp: formData.current_hp,
-            max_hp: formData.max_hp,
-            armor_class: formData.armor_class,
-            notes: formData.notes,
-            character_type: formData.character_type,
-            user_id: user.id,
-            campaign_id: campaignId,
-            position: currentPosition + i,
-            source_character_id: formData.source_character_id,
-          });
-        }
-      } else {
-        // Entrada única
-        entriesToAdd.push({
-          name: baseName,
-          initiative_value: formData.initiative_value,
-          current_hp: formData.current_hp,
-          max_hp: formData.max_hp,
-          armor_class: formData.armor_class,
-          notes: formData.notes,
-          character_type: formData.character_type,
-          user_id: user.id,
-          campaign_id: campaignId,
-          position: currentPosition + 1,
-          source_character_id: formData.source_character_id || null,
-        });
-      }
-  
-      const { error } = await supabase.from("initiative_entries").insert(entriesToAdd);
+
+      const characterData = {
+        ...formData,
+        user_id: user.id,
+        position: characters.length + 1,
+      };
+
+      const { error } = await supabase.from("initiative_entries").insert(characterData);
       if (error) throw error;
-  
-      toast.success(`${entriesToAdd.length} personagem(s) adicionado(s) à iniciativa!`);
+
+      toast.success("Personagem adicionado à iniciativa!");
       setDialogOpen(false);
       resetForm();
-      setQuantity(1);
       fetchCharacters();
     } catch (error: any) {
       console.error("Erro ao adicionar personagem:", error);
@@ -639,176 +518,93 @@ const Initiative = () => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-card border-2 border-border">
-  <DialogHeader>
-    <DialogTitle>Adicionar à Iniciativa</DialogTitle>
-    <DialogDescription>
-      Adicione um personagem à lista de iniciativa
-    </DialogDescription>
-  </DialogHeader>
-  <form onSubmit={handleSubmit} className="space-y-4">
-    {/* Seletor de Tipo */}
-    <div className="space-y-2">
-      <Label htmlFor="character_type">Tipo de Personagem</Label>
-      <select
-        id="character_type"
-        value={formData.character_type}
-        onChange={async (e) => {
-          const newType = e.target.value as 'player' | 'npc';
-          setFormData({ 
-            ...formData, 
-            character_type: newType,
-            source_character_id: "",
-            name: "",
-            current_hp: 0,
-            max_hp: 0,
-            armor_class: 10
-          });
-          await fetchAvailableCharacters(newType);
-        }}
-        className="w-full p-2 border border-border rounded-md bg-background"
-      >
-        <option value="player">Jogador</option>
-        <option value="npc">NPC</option>
-        <option value="manual">Manual (digitar dados)</option>
-      </select>
-    </div>
-
-    {/* Seletor de Personagem (apenas se não for manual) */}
-    {formData.character_type !== 'manual' && (
-      <div className="space-y-2">
-        <Label htmlFor="character_select">Selecionar Personagem</Label>
-        {loadingCharacters ? (
-          <div className="text-center py-4">
-            <p className="text-muted-foreground">Carregando personagens...</p>
-          </div>
-        ) : (
-          <select
-  id="character_select"
-  value={formData.source_character_id}
-  onChange={(e) => {
-    const selectedId = e.target.value;
-    const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
-    
-    if (selectedCharacter) {
-      setFormData({
-        ...formData,
-        source_character_id: selectedId,
-        name: selectedCharacter.name,
-        current_hp: selectedCharacter.current_hp || 0,
-        max_hp: selectedCharacter.max_hp || 0,
-        armor_class: selectedCharacter.armor_class || 10
-      });
-    }
-  }}
-  className="w-full p-2 border border-border rounded-md bg-background"
->
-  <option value="">Selecione um personagem</option>
-  {availableCharacters.map((character) => (
-    <option key={character.id} value={character.id}>
-      {character.name} (HP: {character.current_hp || 0}/{character.max_hp || 0}, CA: {character.armor_class || 10})
-    </option>
-  ))}
-</select>
-        )}
-        {availableCharacters.length === 0 && !loadingCharacters && (
-          <p className="text-sm text-muted-foreground">
-            Nenhum {formData.character_type === 'player' ? 'jogador' : 'NPC'} encontrado
-          </p>
-        )}
-      </div>
-    )}
-
-    {/* Campo para quantidade (apenas se selecionou um personagem) */}
-    {(formData.character_type !== 'manual' && formData.source_character_id) && (
-      <div className="space-y-2">
-        <Label htmlFor="quantity">Quantidade</Label>
-        <Input
-          id="quantity"
-          type="number"
-          min="1"
-          max="20"
-          value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-          className="w-24"
-        />
-        <p className="text-sm text-muted-foreground">
-          Adicionar múltiplas cópias deste personagem
-        </p>
-      </div>
-    )}
-
-    {/* Campos manuais (apenas se for manual ou se não selecionou personagem) */}
-    {(formData.character_type === 'manual' || !formData.source_character_id) && (
-      <>
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="current_hp">HP Atual</Label>
-            <Input
-              id="current_hp"
-              type="number"
-              value={formData.current_hp}
-              onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="max_hp">HP Máximo</Label>
-            <Input
-              id="max_hp"
-              type="number"
-              value={formData.max_hp}
-              onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="armor_class">Classe de Armadura</Label>
-          <Input
-            id="armor_class"
-            type="number"
-            value={formData.armor_class}
-            onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
-          />
-        </div>
-      </>
-    )}
-
-    {/* Campo de iniciativa SEMPRE visível */}
-    <div className="space-y-2">
-      <Label htmlFor="initiative_value">Iniciativa *</Label>
-      <Input
-        id="initiative_value"
-        type="number"
-        value={formData.initiative_value}
-        onChange={(e) => setFormData({ ...formData, initiative_value: parseInt(e.target.value) || 0 })}
-        required
-      />
-    </div>
-    
-    <div className="space-y-2">
-      <Label htmlFor="notes">Notas</Label>
-      <Input
-        id="notes"
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-      />
-    </div>
-    
-    <Button type="submit" className="w-full">
-      Adicionar à Iniciativa
-    </Button>
-  </form>
-</DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Adicionar à Iniciativa</DialogTitle>
+                    <DialogDescription>
+                      Adicione um personagem à lista de iniciativa
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="initiative_value">Iniciativa</Label>
+                        <Input
+                          id="initiative_value"
+                          type="number"
+                          value={formData.initiative_value}
+                          onChange={(e) => setFormData({ ...formData, initiative_value: parseInt(e.target.value) || 0 })}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="current_hp">HP Atual</Label>
+                        <Input
+                          id="current_hp"
+                          type="number"
+                          value={formData.current_hp}
+                          onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="max_hp">HP Máximo</Label>
+                        <Input
+                          id="max_hp"
+                          type="number"
+                          value={formData.max_hp}
+                          onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="armor_class">Classe de Armadura</Label>
+                      <Input
+                        id="armor_class"
+                        type="number"
+                        value={formData.armor_class}
+                        onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="character_type">Tipo de Personagem</Label>
+                      <select
+                        id="character_type"
+                        value={formData.character_type}
+                        onChange={(e) => setFormData({ ...formData, character_type: e.target.value as 'player' | 'npc' })}
+                        className="w-full p-2 border border-border rounded-md bg-background"
+                      >
+                        <option value="player">Jogador</option>
+                        <option value="npc">NPC</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Notas</Label>
+                      <Input
+                        id="notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      />
+                    </div>
+                    
+                    <Button type="submit" className="w-full">
+                      Adicionar à Iniciativa
+                    </Button>
+                  </form>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
