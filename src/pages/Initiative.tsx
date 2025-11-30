@@ -22,12 +22,10 @@ interface InitiativeCharacter {
   notes: string;
   character_type: 'player' | 'npc';
   statuses: CharacterStatus[];
-  
   campaign_id?: string;
   source_character_id?: string;
 }
 
-// Adicione estas interfaces para os personagens de origem
 interface BaseCharacter {
   id: string;
   name: string;
@@ -47,11 +45,9 @@ interface CharacterStatus {
   notes: string;
 }
 
-
 interface PlayerCharacter extends BaseCharacter {
   character_class?: string | null;
   level?: number | null;
-  // outros campos específicos de players...
 }
 
 interface NpcCharacter extends BaseCharacter {
@@ -60,7 +56,6 @@ interface NpcCharacter extends BaseCharacter {
   will_save?: number | null;
   perception?: number | null;
   attacks?: string | null;
-  // outros campos específicos de npcs...
 }
 
 interface StatusType {
@@ -70,7 +65,6 @@ interface StatusType {
   description: string;
 }
 
-// Adicione esta interface para o último roll
 interface LastRoll {
   dice: string;
   result: number;
@@ -99,7 +93,7 @@ const Initiative = () => {
   // Estado para rolagem de dados
   const [lastRoll, setLastRoll] = useState<LastRoll | null>(null);
   
-  // NOVOS ESTADOS - MOVER PARA DENTRO DO COMPONENTE ↓
+  // Estados para personagens disponíveis
   const [availableCharacters, setAvailableCharacters] = useState<(PlayerCharacter | NpcCharacter)[]>([]);
   const [loadingCharacters, setLoadingCharacters] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -112,7 +106,7 @@ const Initiative = () => {
     armor_class: 10,
     notes: "",
     character_type: "player" as 'player' | 'npc',
-    source_character_id: "", // ← NOVO: ID do personagem de origem
+    source_character_id: "",
   });
   
   const [statusFormData, setStatusFormData] = useState({
@@ -121,11 +115,18 @@ const Initiative = () => {
     notes: "",
   });
 
+  // Adicionar debug para verificar a campanha atual
+  useEffect(() => {
+    const campaignId = localStorage.getItem('current-campaign');
+    console.log('🔄 Campaign ID no localStorage:', campaignId);
+  }, []);
 
   const fetchAvailableCharacters = async (type: 'player' | 'npc') => {
     try {
       setLoadingCharacters(true);
       const campaignId = localStorage.getItem('current-campaign');
+      
+      console.log('📋 Buscando personagens para campanha:', campaignId, 'Tipo:', type);
       
       if (!campaignId) {
         toast.error("Nenhuma campanha selecionada");
@@ -141,7 +142,8 @@ const Initiative = () => {
   
         if (error) throw error;
         
-        // Mapear os campos manualmente
+        console.log('🎯 Jogadores encontrados:', data);
+        
         const mappedData = (data || []).map(player => ({
           id: player.id,
           name: player.name,
@@ -159,6 +161,8 @@ const Initiative = () => {
           .order('name');
   
         if (error) throw error;
+        
+        console.log('👹 NPCs encontrados:', data);
         setAvailableCharacters(data || []);
       }
     } catch (error: any) {
@@ -169,7 +173,6 @@ const Initiative = () => {
     }
   };
 
-  // Adicione a função rollDice completa
   const rollDice = (dice: string) => {
     let result = 0;
     
@@ -188,7 +191,6 @@ const Initiative = () => {
     }
     
     setLastRoll({ dice, result });
-    
   };
 
   // Efeito para controlar o timer
@@ -204,7 +206,6 @@ const Initiative = () => {
       }
     }
 
-    // Cleanup do timer quando o componente desmontar
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -227,13 +228,27 @@ const Initiative = () => {
 
   const fetchCharacters = async () => {
     try {
+      const campaignId = localStorage.getItem('current-campaign');
+      
+      console.log('🎲 Buscando iniciativa para campanha:', campaignId);
+      
+      if (!campaignId) {
+        toast.error("Nenhuma campanha selecionada");
+        setCharacters([]);
+        setLoading(false);
+        return;
+      }
+
       const { data: initiatives, error } = await supabase
         .from("initiative_entries")
         .select("*")
+        .eq("campaign_id", campaignId)
         .order("initiative_value", { ascending: false })
         .order("position", { ascending: false });
 
       if (error) throw error;
+
+      console.log('📊 Entradas de iniciativa encontradas:', initiatives);
 
       const charactersWithStatuses = await Promise.all(
         (initiatives || []).map(async (char) => {
@@ -254,6 +269,7 @@ const Initiative = () => {
         })
       );
 
+      console.log('👥 Personagens com status:', charactersWithStatuses);
       setCharacters(charactersWithStatuses);
     } catch (error: any) {
       console.error("Erro ao carregar lista de iniciativa:", error);
@@ -299,7 +315,6 @@ const Initiative = () => {
     }
 
     if (currentTurn >= characters.length) {
-      // Volta para o primeiro personagem e incrementa a rodada
       setCurrentTurn(1);
       setTotalTurns(prev => prev + 1);
       toast.success(`🎉 Rodada ${totalTurns + 1} iniciada!`);
@@ -381,7 +396,6 @@ const Initiative = () => {
       const baseName = formData.name;
       const currentPosition = characters.length;
       
-      // Se for múltiplas cópias de um template
       if (quantity > 1 && formData.character_type !== 'manual' && formData.source_character_id) {
         for (let i = 1; i <= quantity; i++) {
           entriesToAdd.push({
@@ -399,7 +413,6 @@ const Initiative = () => {
           });
         }
       } else {
-        // Entrada única
         entriesToAdd.push({
           name: baseName,
           initiative_value: formData.initiative_value,
@@ -415,6 +428,7 @@ const Initiative = () => {
         });
       }
   
+      console.log('➕ Adicionando à iniciativa:', entriesToAdd);
       const { error } = await supabase.from("initiative_entries").insert(entriesToAdd);
       if (error) throw error;
   
@@ -507,6 +521,7 @@ const Initiative = () => {
       armor_class: 10,
       notes: "",
       character_type: "player",
+      source_character_id: "",
     });
   };
 
@@ -583,7 +598,6 @@ const Initiative = () => {
     <Layout>
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3">
-          {/* Header com título e controles de combate reorganizados */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div>
@@ -596,7 +610,6 @@ const Initiative = () => {
               </div>
             </div>
             
-            {/* Controles de Combate movidos para baixo do título */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3">
                 {!combatStarted ? (
@@ -639,181 +652,175 @@ const Initiative = () => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-card border-2 border-border">
-  <DialogHeader>
-    <DialogTitle>Adicionar à Iniciativa</DialogTitle>
-    <DialogDescription>
-      Adicione um personagem à lista de iniciativa
-    </DialogDescription>
-  </DialogHeader>
-  <form onSubmit={handleSubmit} className="space-y-4">
-    {/* Seletor de Tipo */}
-    <div className="space-y-2">
-      <Label htmlFor="character_type">Tipo de Personagem</Label>
-      <select
-        id="character_type"
-        value={formData.character_type}
-        onChange={async (e) => {
-          const newType = e.target.value as 'player' | 'npc';
-          setFormData({ 
-            ...formData, 
-            character_type: newType,
-            source_character_id: "",
-            name: "",
-            current_hp: 0,
-            max_hp: 0,
-            armor_class: 10
-          });
-          await fetchAvailableCharacters(newType);
-        }}
-        className="w-full p-2 border border-border rounded-md bg-background"
-      >
-        <option value="player">Jogador</option>
-        <option value="npc">NPC</option>
-        <option value="manual">Manual (digitar dados)</option>
-      </select>
-    </div>
+                  <DialogHeader>
+                    <DialogTitle>Adicionar à Iniciativa</DialogTitle>
+                    <DialogDescription>
+                      Adicione um personagem à lista de iniciativa
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="character_type">Tipo de Personagem</Label>
+                      <select
+                        id="character_type"
+                        value={formData.character_type}
+                        onChange={async (e) => {
+                          const newType = e.target.value as 'player' | 'npc';
+                          setFormData({ 
+                            ...formData, 
+                            character_type: newType,
+                            source_character_id: "",
+                            name: "",
+                            current_hp: 0,
+                            max_hp: 0,
+                            armor_class: 10
+                          });
+                          await fetchAvailableCharacters(newType);
+                        }}
+                        className="w-full p-2 border border-border rounded-md bg-background"
+                      >
+                        <option value="player">Jogador</option>
+                        <option value="npc">NPC</option>
+                        <option value="manual">Manual (digitar dados)</option>
+                      </select>
+                    </div>
 
-    {/* Seletor de Personagem (apenas se não for manual) */}
-    {formData.character_type !== 'manual' && (
-      <div className="space-y-2">
-        <Label htmlFor="character_select">Selecionar Personagem</Label>
-        {loadingCharacters ? (
-          <div className="text-center py-4">
-            <p className="text-muted-foreground">Carregando personagens...</p>
-          </div>
-        ) : (
-          <select
-  id="character_select"
-  value={formData.source_character_id}
-  onChange={(e) => {
-    const selectedId = e.target.value;
-    const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
-    
-    if (selectedCharacter) {
-      setFormData({
-        ...formData,
-        source_character_id: selectedId,
-        name: selectedCharacter.name,
-        current_hp: selectedCharacter.current_hp || 0,
-        max_hp: selectedCharacter.max_hp || 0,
-        armor_class: selectedCharacter.armor_class || 10
-      });
-    }
-  }}
-  className="w-full p-2 border border-border rounded-md bg-background"
->
-  <option value="">Selecione um personagem</option>
-  {availableCharacters.map((character) => (
-    <option key={character.id} value={character.id}>
-      {character.name} (HP: {character.current_hp || 0}/{character.max_hp || 0}, CA: {character.armor_class || 10})
-    </option>
-  ))}
-</select>
-        )}
-        {availableCharacters.length === 0 && !loadingCharacters && (
-          <p className="text-sm text-muted-foreground">
-            Nenhum {formData.character_type === 'player' ? 'jogador' : 'NPC'} encontrado
-          </p>
-        )}
-      </div>
-    )}
+                    {formData.character_type !== 'manual' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="character_select">Selecionar Personagem</Label>
+                        {loadingCharacters ? (
+                          <div className="text-center py-4">
+                            <p className="text-muted-foreground">Carregando personagens...</p>
+                          </div>
+                        ) : (
+                          <select
+                            id="character_select"
+                            value={formData.source_character_id}
+                            onChange={(e) => {
+                              const selectedId = e.target.value;
+                              const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
+                              
+                              if (selectedCharacter) {
+                                setFormData({
+                                  ...formData,
+                                  source_character_id: selectedId,
+                                  name: selectedCharacter.name,
+                                  current_hp: selectedCharacter.current_hp || 0,
+                                  max_hp: selectedCharacter.max_hp || 0,
+                                  armor_class: selectedCharacter.armor_class || 10
+                                });
+                              }
+                            }}
+                            className="w-full p-2 border border-border rounded-md bg-background"
+                          >
+                            <option value="">Selecione um personagem</option>
+                            {availableCharacters.map((character) => (
+                              <option key={character.id} value={character.id}>
+                                {character.name} (HP: {character.current_hp || 0}/{character.max_hp || 0}, CA: {character.armor_class || 10})
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        {availableCharacters.length === 0 && !loadingCharacters && (
+                          <p className="text-sm text-muted-foreground">
+                            Nenhum {formData.character_type === 'player' ? 'jogador' : 'NPC'} encontrado
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-    {/* Campo para quantidade (apenas se selecionou um personagem) */}
-    {(formData.character_type !== 'manual' && formData.source_character_id) && (
-      <div className="space-y-2">
-        <Label htmlFor="quantity">Quantidade</Label>
-        <Input
-          id="quantity"
-          type="number"
-          min="1"
-          max="20"
-          value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-          className="w-24"
-        />
-        <p className="text-sm text-muted-foreground">
-          Adicionar múltiplas cópias deste personagem
-        </p>
-      </div>
-    )}
+                    {(formData.character_type !== 'manual' && formData.source_character_id) && (
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity">Quantidade</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={quantity}
+                          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                          className="w-24"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Adicionar múltiplas cópias deste personagem
+                        </p>
+                      </div>
+                    )}
 
-    {/* Campos manuais (apenas se for manual ou se não selecionou personagem) */}
-    {(formData.character_type === 'manual' || !formData.source_character_id) && (
-      <>
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="current_hp">HP Atual</Label>
-            <Input
-              id="current_hp"
-              type="number"
-              value={formData.current_hp}
-              onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="max_hp">HP Máximo</Label>
-            <Input
-              id="max_hp"
-              type="number"
-              value={formData.max_hp}
-              onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="armor_class">Classe de Armadura</Label>
-          <Input
-            id="armor_class"
-            type="number"
-            value={formData.armor_class}
-            onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
-          />
-        </div>
-      </>
-    )}
+                    {(formData.character_type === 'manual' || !formData.source_character_id) && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Nome *</Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="current_hp">HP Atual</Label>
+                            <Input
+                              id="current_hp"
+                              type="number"
+                              value={formData.current_hp}
+                              onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="max_hp">HP Máximo</Label>
+                            <Input
+                              id="max_hp"
+                              type="number"
+                              value={formData.max_hp}
+                              onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="armor_class">Classe de Armadura</Label>
+                          <Input
+                            id="armor_class"
+                            type="number"
+                            value={formData.armor_class}
+                            onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
+                          />
+                        </div>
+                      </>
+                    )}
 
-    {/* Campo de iniciativa SEMPRE visível */}
-    <div className="space-y-2">
-      <Label htmlFor="initiative_value">Iniciativa *</Label>
-      <Input
-        id="initiative_value"
-        type="number"
-        value={formData.initiative_value}
-        onChange={(e) => setFormData({ ...formData, initiative_value: parseInt(e.target.value) || 0 })}
-        required
-      />
-    </div>
-    
-    <div className="space-y-2">
-      <Label htmlFor="notes">Notas</Label>
-      <Input
-        id="notes"
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-      />
-    </div>
-    
-    <Button type="submit" className="w-full">
-      Adicionar à Iniciativa
-    </Button>
-  </form>
-</DialogContent>
+                    <div className="space-y-2">
+                      <Label htmlFor="initiative_value">Iniciativa *</Label>
+                      <Input
+                        id="initiative_value"
+                        type="number"
+                        value={formData.initiative_value}
+                        onChange={(e) => setFormData({ ...formData, initiative_value: parseInt(e.target.value) || 0 })}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Notas</Label>
+                      <Input
+                        id="notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      />
+                    </div>
+                    
+                    <Button type="submit" className="w-full">
+                      Adicionar à Iniciativa
+                    </Button>
+                  </form>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
 
-          {/* Painel de Controle do Combate */}
           {combatStarted && (
             <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 mb-6">
               <CardContent className="p-4 sm:p-6">
@@ -843,7 +850,6 @@ const Initiative = () => {
             </Card>
           )}
 
-          {/* Lista de Personagens - Responsiva */}
           <div className="space-y-3">
             {characters.map((character, index) => (
               <div
@@ -1047,7 +1053,6 @@ const Initiative = () => {
             )}
           </div>
 
-          {/* Card de Rolagem Rápida - AGORA FUNCIONANDO */}
           <Card className="card-pergaminho mt-6">
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -1062,7 +1067,6 @@ const Initiative = () => {
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="flex flex-col gap-4">
-                {/* Botões de Dados */}
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                   {[
                     { dice: '1d4', label: '1d4' },
@@ -1084,7 +1088,6 @@ const Initiative = () => {
                   ))}
                 </div>
 
-                {/* Resultado - agora em linha em telas maiores */}
                 <div className="flex items-center justify-center sm:justify-start gap-3">
                   <div className="text-center sm:text-left">
                     <div className="text-sm text-muted-foreground">Última rolagem</div>
@@ -1103,7 +1106,6 @@ const Initiative = () => {
           </Card>
         </div>
 
-        {/* Sidebar com espaçamento entre os cards */}
         <div className="lg:col-span-1">
           <div className="sticky top-4 space-y-4">
             <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
@@ -1191,7 +1193,6 @@ const Initiative = () => {
               </CardContent>
             </Card>
             
-            {/* Card Dashboard - Mantendo o padrão que você especificou */}
             <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
               <CardHeader>
                 <CardTitle>Acesso Rápido</CardTitle>
@@ -1206,12 +1207,10 @@ const Initiative = () => {
                   >
                     <CardHeader className="p-2 sm:p-3 relative z-10">
                       <div className="flex items-center gap-2">
-                        {/* Ícone bem pequeno */}
                         <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10 flex-shrink-0`}>
                           <Icon className="w-4 h-4 text-white" />
                         </div>
                         
-                        {/* Textos bem compactos */}
                         <div className="flex-1 min-w-0">
                           <CardTitle className="text-sm font-bold leading-tight">
                             {item.title}
