@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Dices, Plus, Trash2, Heart, Shield, Search, ArrowLeft, X, Play, RotateCcw, Clock, SkipForward, MapPin,Book,Swords,User,Users, BookOpen } from "lucide-react";
+import { Dices, Plus, Trash2, Heart, Shield, Search, ArrowLeft, X, Play, RotateCcw, Clock, SkipForward, MapPin,Book,Swords,User,Users, BookOpen,Zap,ChevronRight } from "lucide-react";
 
 interface InitiativeCharacter {
   id: string;
@@ -595,262 +595,96 @@ const Initiative = () => {
   }
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <Layout currentPage="dashboard" backgroundIntensity="low">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
-          <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 
+                            border border-primary/20">
+                <Swords className="w-8 h-8 text-primary" />
+              </div>
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                  Lista de Iniciativa
+                <h2 className="text-3xl font-bold mb-2">
+                  <span className="bg-gradient-to-r from-primary via-secondary to-accent 
+                                 bg-clip-text text-transparent">
+                    Lista de Iniciativa
+                  </span>
                 </h2>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Arraste para reordenar a lista
-                </p>
+                <p className="text-muted-foreground">Organize e gerencie os turnos de combate</p>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                {!combatStarted ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {!combatStarted ? (
+                <Button 
+                  onClick={startCombat}
+                  className="bg-gradient-to-r from-primary to-accent 
+                           hover:from-primary/90 hover:to-accent/90
+                           border border-primary/30
+                           shadow-lg hover:shadow-xl hover:shadow-primary/20"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Iniciar Combate
+                </Button>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
                   <Button 
-                    onClick={startCombat}
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:shadow-[var(--shadow-glow)]"
+                    onClick={resetCombat}
+                    variant="outline"
+                    className="border-2 border-border hover:border-primary/50"
                   >
-                    <Play className="w-4 h-4 mr-2" />
-                    Iniciar Combate
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reiniciar
                   </Button>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button 
-                      onClick={resetCombat}
-                      variant="outline"
-                      className="border-2 border-border"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reiniciar
-                    </Button>
-                    <Button 
-                      onClick={nextTurn}
-                      className="bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)]"
-                    >
-                      <SkipForward className="w-4 h-4 mr-2" />
-                      Próximo Turno
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-              <Dialog open={dialogOpen} onOpenChange={(open) => {
-                setDialogOpen(open);
-                if (!open) resetForm();
-              }}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-accent from-secondary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar
+                  <Button 
+                    onClick={nextTurn}
+                    className="bg-gradient-to-r from-primary to-accent 
+                             hover:from-primary/90 hover:to-accent/90
+                             border border-primary/30
+                             shadow-lg hover:shadow-xl hover:shadow-primary/20"
+                  >
+                    <SkipForward className="w-4 h-4 mr-2" />
+                    Próximo Turno
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-card border-2 border-border">
-                  <DialogHeader>
-                    <DialogTitle>Adicionar à Iniciativa</DialogTitle>
-                    <DialogDescription>
-                      Adicione um personagem à lista de iniciativa
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="character_type">Tipo de Personagem</Label>
-                      <select
-                        id="character_type"
-                        value={formData.character_type}
-                        onChange={async (e) => {
-                          const newType = e.target.value as 'player' | 'npc';
-                          setFormData({ 
-                            ...formData, 
-                            character_type: newType,
-                            source_character_id: "",
-                            name: "",
-                            current_hp: 0,
-                            max_hp: 0,
-                            armor_class: 10
-                          });
-                          await fetchAvailableCharacters(newType);
-                        }}
-                        className="w-full p-2 border border-border rounded-md bg-background"
-                      >
-                        <option value="player">Jogador</option>
-                        <option value="npc">NPC</option>
-                        <option value="manual">Manual (digitar dados)</option>
-                      </select>
-                    </div>
-
-                    {formData.character_type !== 'manual' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="character_select">Selecionar Personagem</Label>
-                        {loadingCharacters ? (
-                          <div className="text-center py-4">
-                            <p className="text-muted-foreground">Carregando personagens...</p>
-                          </div>
-                        ) : (
-                          <select
-                            id="character_select"
-                            value={formData.source_character_id}
-                            onChange={(e) => {
-                              const selectedId = e.target.value;
-                              const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
-                              
-                              if (selectedCharacter) {
-                                setFormData({
-                                  ...formData,
-                                  source_character_id: selectedId,
-                                  name: selectedCharacter.name,
-                                  current_hp: selectedCharacter.current_hp || 0,
-                                  max_hp: selectedCharacter.max_hp || 0,
-                                  armor_class: selectedCharacter.armor_class || 10
-                                });
-                              }
-                            }}
-                            className="w-full p-2 border border-border rounded-md bg-background"
-                          >
-                            <option value="">Selecione um personagem</option>
-                            {availableCharacters.map((character) => (
-                              <option key={character.id} value={character.id}>
-                                {character.name} (HP: {character.current_hp || 0}/{character.max_hp || 0}, CA: {character.armor_class || 10})
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        {availableCharacters.length === 0 && !loadingCharacters && (
-                          <p className="text-sm text-muted-foreground">
-                            Nenhum {formData.character_type === 'player' ? 'jogador' : 'NPC'} encontrado
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {(formData.character_type !== 'manual' && formData.source_character_id) && (
-                      <div className="space-y-2">
-                        <Label htmlFor="quantity">Quantidade</Label>
-                        <Input
-                          id="quantity"
-                          type="number"
-                          min="1"
-                          max="20"
-                          value={quantity}
-                          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                          className="w-24"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Adicionar múltiplas cópias deste personagem
-                        </p>
-                      </div>
-                    )}
-
-                    {(formData.character_type === 'manual' || !formData.source_character_id) && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="name">Nome *</Label>
-                          <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="current_hp">HP Atual</Label>
-                            <Input
-                              id="current_hp"
-                              type="number"
-                              value={formData.current_hp}
-                              onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="max_hp">HP Máximo</Label>
-                            <Input
-                              id="max_hp"
-                              type="number"
-                              value={formData.max_hp}
-                              onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="armor_class">Classe de Armadura</Label>
-                          <Input
-                            id="armor_class"
-                            type="number"
-                            value={formData.armor_class}
-                            onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="initiative_value">Iniciativa *</Label>
-                      <Input
-                        id="initiative_value"
-                        type="number"
-                        value={formData.initiative_value}
-                        onChange={(e) => setFormData({ ...formData, initiative_value: parseInt(e.target.value) || 0 })}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notas</Label>
-                      <Input
-                        id="notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="w-full">
-                      Adicionar à Iniciativa
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                </div>
+              )}
             </div>
           </div>
-
+  
+          {/* Card de Status do Combate */}
           {combatStarted && (
             <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 mb-6">
-              <CardContent className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-primary">{currentTurn}</div>
-                    <div className="text-sm text-muted-foreground">Turno Atual</div>
-                    <div className="text-xs text-muted-foreground mt-1 truncate">
-                      {characters[currentTurn - 1]?.name || 'N/A'}
+                    <div className="text-3xl font-bold text-primary">{currentTurn}</div>
+                    <div className="text-sm text-muted-foreground mt-1">Turno Atual</div>
+                    <div className="text-sm font-medium mt-2 truncate">
+                      {characters[currentTurn - 1]?.name || '--'}
                     </div>
                   </div>
                   
                   <div className="text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-accent">{totalTurns}</div>
-                    <div className="text-sm text-muted-foreground">Rodada</div>
+                    <div className="text-3xl font-bold text-accent">{totalTurns}</div>
+                    <div className="text-sm text-muted-foreground mt-1">Rodada</div>
                   </div>
                   
                   <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold text-green-600">
-                      <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <div className="flex items-center justify-center gap-2 text-3xl font-bold text-green-600">
+                      <Clock className="w-6 h-6" />
                       {formatTime(combatTime)}
                     </div>
-                    <div className="text-sm text-muted-foreground">Tempo de Combate</div>
+                    <div className="text-sm text-muted-foreground mt-1">Tempo de Combate</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
-
-          <div className="space-y-3">
+  
+          {/* Lista de Personagens */}
+          <div className="space-y-4">
             {characters.map((character, index) => (
               <div
                 key={character.id}
@@ -860,40 +694,41 @@ const Initiative = () => {
                 onDrop={(e) => handleDrop(e, character.id)}
                 className={`cursor-move transition-all duration-200 hover:scale-[1.02] ${
                   combatStarted && currentTurn === index + 1 
-                    ? 'ring-2 sm:ring-4 ring-primary ring-opacity-50 rounded-lg' 
+                    ? 'ring-2 ring-primary ring-opacity-50 rounded-lg' 
                     : ''
                 }`}
               >
-                <Card className={`border-2 border-border bg-gradient-to-br from-card to-card/80 hover:border-primary/50 ${
+                <Card className={`border-2 border-border bg-card/80 hover:bg-card transition-all duration-300
+                               hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)] ${
                   combatStarted && currentTurn === index + 1 
                     ? 'border-primary shadow-lg' 
-                    : ''
+                    : 'hover:border-primary/50'
                 }`}>
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 ${
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
                           combatStarted && currentTurn === index + 1
                             ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-primary/20 border-primary'
+                            : 'bg-primary/10 border-primary/30'
                         }`}>
-                          <span className="font-bold text-base sm:text-lg">{index + 1}</span>
+                          <span className="font-bold text-lg">{index + 1}</span>
                         </div>
-
+  
                         <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-bold text-base sm:text-lg truncate">{character.name}</h3>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg truncate">{character.name}</h3>
                             <Badge 
                               variant="outline" 
                               className={character.character_type === 'player' 
-                                ? "bg-green-500/20 text-green-600 border-green-500 text-xs" 
-                                : "bg-purple-500/20 text-purple-600 border-purple-500 text-xs"
+                                ? "bg-green-500/20 text-green-600 border-green-500" 
+                                : "bg-purple-500/20 text-purple-600 border-purple-500"
                               }
                             >
                               {character.character_type === 'player' ? 'Jogador' : 'NPC'}
                             </Badge>
                             {combatStarted && currentTurn === index + 1 && (
-                              <Badge className="bg-primary text-primary-foreground animate-pulse text-xs">
+                              <Badge className="bg-primary text-primary-foreground animate-pulse">
                                 TURNO ATUAL
                               </Badge>
                             )}
@@ -903,27 +738,27 @@ const Initiative = () => {
                           </p>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 w-full sm:w-auto">
+  
+                      <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                         <div className="flex items-center gap-2">
-                          <Heart className="w-4 h-4 text-red-500 flex-shrink-0" />
-                          <div className="flex items-center gap-1">
+                          <Heart className="w-5 h-5 text-red-500" />
+                          <div className="flex items-center gap-2">
                             <Input
                               type="number"
                               value={character.current_hp}
                               onChange={(e) => handleUpdateHP(character.id, parseInt(e.target.value) || 0)}
-                              className="w-14 h-7 sm:w-16 sm:h-8 text-center text-sm"
+                              className="w-16 h-8 text-center"
                             />
-                            <span className="text-muted-foreground text-sm">/</span>
-                            <span className="text-sm w-8">{character.max_hp}</span>
+                            <span className="text-muted-foreground">/</span>
+                            <span className="w-10">{character.max_hp}</span>
                           </div>
                         </div>
-
+  
                         <div className="flex items-center gap-2">
-                          <Shield className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                          <span className="font-medium text-sm">{character.armor_class}</span>
+                          <Shield className="w-5 h-5 text-blue-500" />
+                          <span className="font-medium">{character.armor_class}</span>
                         </div>
-
+  
                         <div className="flex items-center gap-2">
                           <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
                             <DialogTrigger asChild>
@@ -931,27 +766,31 @@ const Initiative = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setSelectedCharacter(character)}
-                                className="h-7 text-xs"
+                                className="h-8 border-border hover:border-primary/50"
                               >
-                                <Plus className="w-3 h-3 mr-1" />
+                                <Plus className="w-4 h-4 mr-1" />
                                 Status
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="bg-card border-2 border-border max-w-[95vw] rounded-md">
+                            <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
+                                                    shadow-[var(--shadow-glow)] max-w-md">
                               <DialogHeader>
-                                <DialogTitle>Adicionar Status</DialogTitle>
+                                <DialogTitle className="text-xl">
+                                  Adicionar Status
+                                </DialogTitle>
                                 <DialogDescription>
                                   Adicione um status a {selectedCharacter?.name}
                                 </DialogDescription>
                               </DialogHeader>
                               <form onSubmit={handleAddStatus} className="space-y-4">
                                 <div className="space-y-2">
-                                  <Label htmlFor="status_type">Tipo de Status</Label>
+                                  <Label htmlFor="status_type" className="text-foreground/90">Tipo de Status</Label>
                                   <select
                                     id="status_type"
                                     value={statusFormData.status_type_id}
                                     onChange={(e) => setStatusFormData({ ...statusFormData, status_type_id: e.target.value })}
-                                    className="w-full p-2 border border-border rounded-md bg-background"
+                                    className="w-full p-2 border border-border/50 rounded-md bg-card 
+                                             focus:border-primary focus:outline-none"
                                     required
                                   >
                                     <option value="">Selecione um status</option>
@@ -964,49 +803,53 @@ const Initiative = () => {
                                 </div>
                                 
                                 <div className="space-y-2">
-                                  <Label htmlFor="duration">Duração (rodadas)</Label>
+                                  <Label htmlFor="duration" className="text-foreground/90">Duração (rodadas)</Label>
                                   <Input
                                     id="duration"
                                     type="number"
                                     value={statusFormData.duration}
                                     onChange={(e) => setStatusFormData({ ...statusFormData, duration: parseInt(e.target.value) || 0 })}
+                                    className="border-border/50 focus:border-primary"
                                   />
                                 </div>
                                 
                                 <div className="space-y-2">
-                                  <Label htmlFor="status_notes">Notas do Status</Label>
+                                  <Label htmlFor="status_notes" className="text-foreground/90">Notas do Status</Label>
                                   <Input
                                     id="status_notes"
                                     value={statusFormData.notes}
                                     onChange={(e) => setStatusFormData({ ...statusFormData, notes: e.target.value })}
+                                    className="border-border/50 focus:border-primary"
                                   />
                                 </div>
                                 
-                                <Button type="submit" className="w-full">
+                                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent 
+                                                               hover:from-primary/90 hover:to-accent/90
+                                                               border border-primary/30 shadow-lg">
                                   Adicionar Status
                                 </Button>
                               </form>
                             </DialogContent>
                           </Dialog>
-
+  
                           <Button
                             variant="destructive"
                             size="icon"
                             onClick={() => handleDelete(character.id)}
-                            className="h-7 w-7"
+                            className="h-8 w-8"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
                     </div>
-
+  
                     {character.statuses.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-4 flex flex-wrap gap-2">
                         {character.statuses.map((status) => (
                           <Badge
                             key={status.id}
-                            className="flex items-center gap-1 cursor-pointer text-xs"
+                            className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
                             style={{ 
                               backgroundColor: status.status_type.color + '20',
                               borderColor: status.status_type.color,
@@ -1033,39 +876,59 @@ const Initiative = () => {
                         ))}
                       </div>
                     )}
-
+  
                     {character.notes && (
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        <strong>Notas:</strong> {character.notes}
+                      <div className="mt-3 p-3 rounded-lg bg-card/50 border border-border/50">
+                        <p className="text-sm text-foreground/80">
+                          <span className="font-medium text-foreground">Notas:</span> {character.notes}
+                        </p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </div>
             ))}
-
+  
             {characters.length === 0 && (
-              <Card className="border-2 border-dashed border-border">
+              <Card className="border-2 border-dashed border-border/50 bg-card/50">
                 <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">Nenhum personagem na iniciativa</p>
+                  <Swords className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                  <p className="text-muted-foreground mb-4">Nenhum personagem na iniciativa</p>
+                  <Dialog open={dialogOpen} onOpenChange={(open) => {
+                    setDialogOpen(open);
+                    if (!open) resetForm();
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        className="border-primary/30 hover:border-primary/50"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Personagem
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
                 </CardContent>
               </Card>
             )}
           </div>
-
-          <Card className="card-pergaminho mt-6">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <Dices className="w-5 h-5" />
-                <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+  
+          {/* Card de Rolagem Rápida */}
+          <Card className="mt-6 border-2 border-border bg-card/80">
+            <CardHeader className="p-6 border-b border-border/50">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10">
+                  <Dices className="w-6 h-6 text-primary" />
+                </div>
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Rolagem Rápida
                 </span>
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
+              <CardDescription>
                 Role dados rapidamente durante a sessão
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
+            <CardContent className="p-6">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                   {[
@@ -1080,21 +943,28 @@ const Initiative = () => {
                       key={dice}
                       onClick={() => rollDice(dice)}
                       variant="outline"
-                      className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 min-w-[60px] text-sm py-2 h-auto"
+                      className="bg-primary/5 hover:bg-primary/10 border-2 border-primary/20 
+                               hover:border-primary/50 transition-all duration-200 
+                               min-w-[70px] text-sm py-3 h-auto"
                       size="sm"
                     >
                       {label}
                     </Button>
                   ))}
                 </div>
-
-                <div className="flex items-center justify-center sm:justify-start gap-3">
+  
+                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3">
                   <div className="text-center sm:text-left">
                     <div className="text-sm text-muted-foreground">Última rolagem</div>
                     {lastRoll ? (
                       <div className="flex items-center gap-2 justify-center sm:justify-start">
                         <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
-                        <span className="text-xl font-bold text-primary">{lastRoll.result}</span>
+                        <span className="text-2xl font-bold text-primary">{lastRoll.result}</span>
+                        {lastRoll.result === 20 && (
+                          <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-full">
+                            🎯 Crítico!
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <span className="text-sm text-muted-foreground">--</span>
@@ -1105,127 +975,345 @@ const Initiative = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="lg:col-span-1">
-          <div className="sticky top-4 space-y-4">
-            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Consulta de Status</span>
-                  {selectedStatus && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedStatus(null)}
-                      className="h-6 w-6"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  Procure e consulte a descrição dos status
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!selectedStatus ? (
-                  <>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Procurar status..."
-                        value={searchStatus}
-                        onChange={(e) => setSearchStatus(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2 max-h-80 overflow-y-auto">
-                      {filteredStatusTypes.map((status) => (
-                        <div
-                          key={status.id}
-                          className="p-3 border border-border rounded-md hover:bg-accent/20 cursor-pointer transition-colors"
-                          onClick={() => handleConsultStatus(status)}
+  
+        {/* Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Botão Adicionar Personagem */}
+          <Card className="border-2 border-border bg-card/80">
+            <CardContent className="p-6">
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-accent 
+                             hover:from-primary/90 hover:to-accent/90
+                             border border-primary/30 shadow-lg hover:shadow-primary/20"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar à Iniciativa
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
+                                        shadow-[var(--shadow-glow)] max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl">
+                      Adicionar à Iniciativa
+                    </DialogTitle>
+                    <DialogDescription>
+                      Adicione um personagem à lista de iniciativa
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="character_type" className="text-foreground/90">Tipo de Personagem</Label>
+                        <select
+                          id="character_type"
+                          value={formData.character_type}
+                          onChange={async (e) => {
+                            const newType = e.target.value as 'player' | 'npc';
+                            setFormData({ 
+                              ...formData, 
+                              character_type: newType,
+                              source_character_id: "",
+                              name: "",
+                              current_hp: 0,
+                              max_hp: 0,
+                              armor_class: 10
+                            });
+                            await fetchAvailableCharacters(newType);
+                          }}
+                          className="w-full p-2 border border-border/50 rounded-md bg-card 
+                                   focus:border-primary focus:outline-none"
                         >
-                          <div className="flex items-center gap-2 mb-1">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: status.color }}
-                            />
-                            <span className="font-medium">{status.name}</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {status.description}
-                          </p>
+                          <option value="player">Jogador</option>
+                          <option value="npc">NPC</option>
+                          <option value="manual">Manual (digitar dados)</option>
+                        </select>
+                      </div>
+  
+                      {formData.character_type !== 'manual' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="character_select" className="text-foreground/90">Selecionar Personagem</Label>
+                          {loadingCharacters ? (
+                            <div className="text-center py-4">
+                              <p className="text-muted-foreground">Carregando personagens...</p>
+                            </div>
+                          ) : (
+                            <select
+                              id="character_select"
+                              value={formData.source_character_id}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
+                                
+                                if (selectedCharacter) {
+                                  setFormData({
+                                    ...formData,
+                                    source_character_id: selectedId,
+                                    name: selectedCharacter.name,
+                                    current_hp: selectedCharacter.current_hp || 0,
+                                    max_hp: selectedCharacter.max_hp || 0,
+                                    armor_class: selectedCharacter.armor_class || 10
+                                  });
+                                }
+                              }}
+                              className="w-full p-2 border border-border/50 rounded-md bg-card 
+                                       focus:border-primary focus:outline-none"
+                            >
+                              <option value="">Selecione um personagem</option>
+                              {availableCharacters.map((character) => (
+                                <option key={character.id} value={character.id}>
+                                  {character.name} (HP: {character.current_hp || 0}/{character.max_hp || 0}, CA: {character.armor_class || 10})
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {availableCharacters.length === 0 && !loadingCharacters && (
+                            <p className="text-sm text-muted-foreground">
+                              Nenhum {formData.character_type === 'player' ? 'jogador' : 'NPC'} encontrado
+                            </p>
+                          )}
                         </div>
-                      ))}
-                      
-                      {filteredStatusTypes.length === 0 && (
-                        <p className="text-center text-muted-foreground py-4">
-                          Nenhum status encontrado
-                        </p>
                       )}
                     </div>
-                  </>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: selectedStatus.color }}
+  
+                    {(formData.character_type !== 'manual' && formData.source_character_id) && (
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity" className="text-foreground/90">Quantidade</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="quantity"
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={quantity}
+                            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                            className="w-24 border-border/50 focus:border-primary"
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            Adicionar múltiplas cópias
+                          </span>
+                        </div>
+                      </div>
+                    )}
+  
+                    {(formData.character_type === 'manual' || !formData.source_character_id) && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-foreground/90">Nome *</Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="border-border/50 focus:border-primary"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="current_hp" className="text-foreground/90">HP Atual</Label>
+                            <Input
+                              id="current_hp"
+                              type="number"
+                              value={formData.current_hp}
+                              onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
+                              className="border-border/50 focus:border-primary"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="max_hp" className="text-foreground/90">HP Máximo</Label>
+                            <Input
+                              id="max_hp"
+                              type="number"
+                              value={formData.max_hp}
+                              onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
+                              className="border-border/50 focus:border-primary"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="armor_class" className="text-foreground/90">Classe de Armadura</Label>
+                          <Input
+                            id="armor_class"
+                            type="number"
+                            value={formData.armor_class}
+                            onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
+                            className="border-border/50 focus:border-primary"
+                          />
+                        </div>
+                      </>
+                    )}
+  
+                    <div className="space-y-2">
+                      <Label htmlFor="initiative_value" className="text-foreground/90">Iniciativa *</Label>
+                      <Input
+                        id="initiative_value"
+                        type="number"
+                        value={formData.initiative_value}
+                        onChange={(e) => setFormData({ ...formData, initiative_value: parseInt(e.target.value) || 0 })}
+                        className="border-border/50 focus:border-primary"
+                        required
                       />
-                      <h3 className="font-bold text-lg">{selectedStatus.name}</h3>
                     </div>
                     
-                    <div className="bg-accent/10 p-3 rounded-md">
-                      <p className="text-sm">{selectedStatus.description}</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="notes" className="text-foreground/90">Notas</Label>
+                      <Input
+                        id="notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        className="border-border/50 focus:border-primary"
+                      />
                     </div>
                     
-                    <Button
-                      onClick={() => setSelectedStatus(null)}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      Voltar para a lista
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent 
+                                                   hover:from-primary/90 hover:to-accent/90
+                                                   border border-primary/30 shadow-lg">
+                      Adicionar à Iniciativa
                     </Button>
-                  </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+  
+          {/* Consulta de Status */}
+          <Card className="border-2 border-border bg-card/80">
+            <CardHeader className="p-6 border-b border-border/50">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-secondary" />
+                  <span>Consulta de Status</span>
+                </div>
+                {selectedStatus && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedStatus(null)}
+                    className="h-6 w-6 hover:bg-primary/10"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 )}
-              </CardContent>
-            </Card>
-            
-            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
-              <CardHeader>
-                <CardTitle>Acesso Rápido</CardTitle>
-              </CardHeader>
+              </CardTitle>
+              <CardDescription>
+                Procure e consulte a descrição dos status
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              {!selectedStatus ? (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Procurar status..."
+                      value={searchStatus}
+                      onChange={(e) => setSearchStatus(e.target.value)}
+                      className="pl-9 border-border/50 focus:border-primary"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                    {filteredStatusTypes.map((status) => (
+                      <div
+                        key={status.id}
+                        className="p-3 border border-border/50 rounded-lg hover:bg-primary/5 
+                                 hover:border-primary/50 cursor-pointer transition-all duration-200
+                                 bg-card/50"
+                        onClick={() => handleConsultStatus(status)}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: status.color }}
+                          />
+                          <span className="font-medium text-foreground">{status.name}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {status.description}
+                        </p>
+                      </div>
+                    ))}
+                    
+                    {filteredStatusTypes.length === 0 && (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">Nenhum status encontrado</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: selectedStatus.color }}
+                    />
+                    <h3 className="font-bold text-lg text-foreground">{selectedStatus.name}</h3>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <p className="text-sm text-foreground/80">{selectedStatus.description}</p>
+                  </div>
+                  
+                  <Button
+                    onClick={() => setSelectedStatus(null)}
+                    variant="outline"
+                    className="w-full border-border hover:border-primary/50"
+                  >
+                    Voltar para a lista
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+  
+          {/* Acesso Rápido */}
+          <Card className="border-2 border-border bg-card/80">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-secondary" />
+                <span>Acesso Rápido</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Card
+                  <div
                     key={item.path}
-                    className="card-pergaminho cursor-pointer transition-all duration-300 hover:scale-105 border hover:border-primary/30"
+                    className="p-3 rounded-lg border border-border hover:border-primary/50 
+                             bg-card/50 hover:bg-card transition-all duration-300
+                             hover:shadow-[0_4px_12px_hsl(var(--primary)_/_0.1)] cursor-pointer
+                             group"
                     onClick={() => navigate(item.path)}
                   >
-                    <CardHeader className="p-2 sm:p-3 relative z-10">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10 flex-shrink-0`}>
-                          <Icon className="w-4 h-4 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} 
+                                    group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">
+                          {item.title}
                         </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm font-bold leading-tight">
-                            {item.title}
-                          </CardTitle>
-                          <CardDescription className="text-muted-foreground/90 text-xs leading-tight line-clamp-1">
-                            {item.description}
-                          </CardDescription>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {item.description}
                         </div>
                       </div>
-                    </CardHeader>
-                  </Card>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary 
+                                             group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
                 );
               })}
-            </Card>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>

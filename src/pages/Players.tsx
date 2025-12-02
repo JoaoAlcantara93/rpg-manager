@@ -1,7 +1,7 @@
 // src/pages/Players.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users,User, Swords, BookOpen, MapPin, Book  } from "lucide-react";
+import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users,User, Swords, BookOpen, MapPin, Book , ChevronRight, Zap} from "lucide-react";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -357,14 +357,20 @@ const Players = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Conteúdo principal */}
         <div className="lg:col-span-3">
-          {/* Header com botão de voltar padronizado */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">              
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 
+                            border border-primary/20">
+                <User className="w-8 h-8 text-primary" />
+              </div>
               <div>
-                <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                  Aventureiros
+                <h2 className="text-3xl font-bold mb-2">
+                  <span className="bg-gradient-to-r from-primary via-secondary to-accent 
+                                 bg-clip-text text-transparent">
+                    Aventureiros
+                  </span>
                 </h2>
-                <p className="text-muted-foreground">Gerencie seus personagens jogáveis</p>
+                <p className="text-muted-foreground">Gerencie os aventureiros dessa camapanha</p>
               </div>
             </div>
             <button
@@ -490,40 +496,46 @@ const Players = () => {
        {/* Sidebar com Acesso Rápido - CORRIGIDO PARA O PADRÃO DOS OUTROS */}
         <div className="lg:col-span-1">
           <div className="sticky top-4 space-y-4">
-            <Card className="border-2 border-border bg-gradient-to-br from-card to-card/80">
-              <CardHeader>
-                <CardTitle>Acesso Rápido</CardTitle>
-              </CardHeader>
+          <Card className="border-2 border-border bg-card/80">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-secondary" />
+                <span>Acesso Rápido</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Card
+                  <div
                     key={item.path}
-                    className="card-pergaminho cursor-pointer transition-all duration-300 hover:scale-105 border hover:border-primary/30"
+                    className="p-3 rounded-lg border border-border hover:border-primary/50 
+                             bg-card/50 hover:bg-card transition-all duration-300
+                             hover:shadow-[0_4px_12px_hsl(var(--primary)_/_0.1)] cursor-pointer
+                             group"
                     onClick={() => navigate(item.path)}
                   >
-                    <CardHeader className="p-2 sm:p-3 relative z-10">
-                      <div className="flex items-center gap-2">
-                        {/* Ícone bem pequeno */}
-                        <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10 flex-shrink-0`}>
-                          <Icon className="w-4 h-4 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} 
+                                    group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">
+                          {item.title}
                         </div>
-                        
-                        {/* Textos bem compactos */}
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm font-bold leading-tight">
-                            {item.title}
-                          </CardTitle>
-                          <CardDescription className="text-muted-foreground/90 text-xs leading-tight line-clamp-1">
-                            {item.description}
-                          </CardDescription>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {item.description}
                         </div>
                       </div>
-                    </CardHeader>
-                  </Card>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary 
+                                             group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
                 );
               })}
-            </Card>
+            </CardContent>
+          </Card>
           </div>
         </div>
         </div>
