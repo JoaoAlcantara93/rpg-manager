@@ -4,68 +4,114 @@
 
 **URL**: https://lovable.dev/projects/637d537a-5042-43b5-bc41-8a10b0e8be56
 
-## How can I edit this code?
+Maestrum - Escudo do Mestre Digital 🛡️
+https://img.shields.io/badge/RPG-Manager-8A2BE2
+https://img.shields.io/badge/Status-Em%2520Desenvolvimento-yellow
+https://img.shields.io/badge/Licen%C3%A7a-MIT-green
 
-There are several ways of editing your application.
+🎯 Sobre o Projeto
+Maestrumr é um escudo digital completo para mestres de RPG, projetado para centralizar e simplificar o gerenciamento de campanhas, personagens, encontros e narrativas. Transforme sua experiência como mestre com ferramentas intuitivas e organizadas.
 
-**Use Lovable**
+✨ Funcionalidades Principais
+Módulo	Descrição
+📚 Gerenciamento de Campanhas	Crie, organize e acompanhe múltiplas campanhas
+👥 Controle de Personagens	Fichas de jogadores e NPCs com histórico completo
+⚔️ Encontros e Combate	Sistema de iniciativa, HP, status effects e rodadas
+🗺️ Gerenciamento de Mapas	Mapas interativos com marcadores e anotações
+📖 Biblioteca de Conteúdo	Bestiário, itens, magias e lore organizados
+🎭 Ferramentas de Narrativa	Gerador de plot hooks, NPCs e eventos aleatórios
+🚀 Começando
+Pré-requisitos
+bash
+# Node.js 16+
+node --version
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/637d537a-5042-43b5-bc41-8a10b0e8be56) and start prompting.
+# npm ou yarn
+npm --version
+Instalação
+bash
+# Clone o repositório
+git clone https://github.com/JoaoAlcantara93/rpg-manager.git
 
-Changes made via Lovable will be committed automatically to this repo.
+# Acesse a pasta do projeto
+cd rpg-manager
 
-**Use your preferred IDE**
+# Instale as dependências
+npm install
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Inicie o servidor de desenvolvimento
+npm start
+🖥️ Uso
+Para Mestres:
+Crie sua campanha - Defina o cenário, regras e jogadores
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Prepare encontros - Monstros, desafios e recompensas
 
-Follow these steps:
+Gerencie sessões - Acompanhe o progresso em tempo real
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Documente a história - Mantenha um log completo das aventuras
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+🛠️ Tecnologias Utilizadas
+https://skillicons.dev/icons?i=react,nodejs,express,mongodb,tailwind,js,ts
 
-# Step 3: Install the necessary dependencies.
-npm i
+Frontend: React.js com TypeScript
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Backend: Node.js + Express
 
-**Edit a file directly in GitHub**
+Banco de Dados: MongoDB
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Estilização: Tailwind CSS
 
-**Use GitHub Codespaces**
+Autenticação: JWT
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Deploy: Docker + Vercel/Heroku
 
-## What technologies are used for this project?
+📁 Estrutura do Projeto
+text
+maestrum/
+├── src/
+│   ├── client/          # Frontend React
+│   ├── server/          # Backend Node.js
+│   └── shared/          # Código compartilhado
+├── docs/               # Documentação
+├── tests/              # Testes automatizados
+└── assets/             # Imagens e recursos
+🤝 Como Contribuir
+Faça um Fork do projeto
 
-This project is built with:
+Crie uma Branch (git checkout -b feature/AmazingFeature)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Commit suas mudanças (git commit -m 'Add some AmazingFeature')
 
-## How can I deploy this project?
+Push para a Branch (git push origin feature/AmazingFeature)
 
-Simply open [Lovable](https://lovable.dev/projects/637d537a-5042-43b5-bc41-8a10b0e8be56) and click on Share -> Publish.
+Abra um Pull Request
 
-## Can I connect a custom domain to my Lovable project?
+📋 Roadmap
+MVP - Gerenciamento básico de campanhas
 
+Sistema de combate em tempo real
+
+Integração com APIs de RPG (D&D Beyond, etc.)
+
+Modo offline
+
+App mobile
+
+Comunidade e compartilhamento de conteúdo
+
+📄 Licença
+Distribuído sob licença MIT. Veja LICENSE para mais informações.
+
+👨‍💻 Autor
+João Alcântara - GitHub
+
+🌟 Agradecimentos
+Inspirado na comunidade RPGista brasileira
+
+Agradecimentos a todos os testadores beta
+
+Contribuidores e apoiadores do projeto
 Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
