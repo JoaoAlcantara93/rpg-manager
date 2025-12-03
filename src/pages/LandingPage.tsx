@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { 
   Users, 
   Map, 
   BookOpen, 
   Dice5, 
-  Smartphone, 
-  Lock, 
   ChevronRight, 
   Star,
   Play,
@@ -17,21 +13,52 @@ import {
   Heart,
   Instagram,
   MessageCircle,
+  Sun,
+  Moon
 } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const navigate = useNavigate(); // Adicione este hook
+  const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Gerenciar scroll
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
+
+    // Verificar tema salvo no carregamento
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const root = document.documentElement;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      setDarkMode(true);
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const toggleTheme = () => {
+    setDarkMode(prev => {
+      const newValue = !prev;
+      const root = document.documentElement;
+      
+      if (newValue) {
+        root.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        root.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+      return newValue;
+    });
+  };
 
   // Função para navegar para a página de login
   const handleGetStarted = () => {
@@ -82,47 +109,72 @@ const LandingPage = () => {
     }
   ];
 
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
       {/* Header */}
       <header className={`border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 transition-all duration-300 ${
-  isScrolled ? 'bg-card/80' : 'bg-card/50'
-}`}>
-  <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full border-2 border-primary/20 flex items-center justify-center overflow-hidden bg-transparent">
-        <img 
-          src="/images/logo.png" 
-          alt="Maestrum Logo" 
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
-        Maestrum
-      </h1>
-    </div>
+        isScrolled ? 'bg-card/80' : 'bg-card/50'
+      }`}>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full border-2 border-primary/20 flex items-center justify-center overflow-hidden bg-transparent">
+              <img 
+                src="/images/logo.png" 
+                alt="Maestrum Logo" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+              Maestrum
+            </h1>
+          </div>
 
-    {/* Navegação Desktop */}
-    <nav className="hidden md:flex items-center gap-6">
-      <a href="#features" className="text-foreground/80 hover:text-foreground transition-colors">Recursos</a>
-      <a href="#testimonials" className="text-foreground/80 hover:text-foreground transition-colors">Avaliações</a>
-      <button 
-        onClick={handleGetStarted} 
-        className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">
-        Entrar
-      </button>
-    </nav>
+          {/* Navegação Desktop */}
+          <nav className="hidden md:flex items-center gap-4">
+            <a href="#features" className="text-foreground/80 hover:text-foreground transition-colors px-3 py-2">Recursos</a>
+            <a href="#testimonials" className="text-foreground/80 hover:text-foreground transition-colors px-3 py-2">Avaliações</a>
+            
+            {/* Botão de Tema */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-card border border-border hover:bg-accent/10 transition-colors flex items-center justify-center"
+              aria-label={darkMode ? "Alternar para modo claro" : "Alternar para modo escuro"}
+            >
+              {darkMode ? (
+                <Sun className="w-5 h-5 text-yellow-500" />
+              ) : (
+                <Moon className="w-5 h-5 text-foreground/80" />
+              )}
+            </button>
+            
+            <button 
+              onClick={handleGetStarted} 
+              className="bg-gradient-to-r from-secondary to-accent text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">
+              Entrar
+            </button>
+          </nav>
 
-    {/* Botão Entrar Mobile - Apenas o botão principal */}
-    <button 
-      onClick={handleGetStarted} 
-      className="md:hidden bg-gradient-to-r from-secondary to-accent text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium text-sm">
-      Entrar
-    </button>
-  </div>
-</header>
+          {/* Mobile - Botão Tema e Entrar */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-card border border-border hover:bg-accent/10 transition-colors flex items-center justify-center"
+              aria-label={darkMode ? "Alternar para modo claro" : "Alternar para modo escuro"}
+            >
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-yellow-500" />
+              ) : (
+                <Moon className="w-4 h-4 text-foreground/80" />
+              )}
+            </button>
+            <button 
+              onClick={handleGetStarted} 
+              className="bg-gradient-to-r from-secondary to-accent text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium text-sm">
+              Entrar
+            </button>
+          </div>
+        </div>
+      </header>
 
       {/* Hero Section - Layout Específico */}
       <section className="container mx-auto px-4 py-16 md:py-24">
@@ -145,9 +197,9 @@ const LandingPage = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <button 
-              onClick={handleGetStarted} 
-              className="bg-gradient-to-r from-secondary to-accent text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg flex items-center justify-center gap-2 group">
+              <button 
+                onClick={handleGetStarted} 
+                className="bg-gradient-to-r from-secondary to-accent text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg flex items-center justify-center gap-2 group">
                 Começar Agora
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -183,7 +235,7 @@ const LandingPage = () => {
                     <img 
                       src="/images/logo.png" 
                       alt="Maestrum Logo" 
-                      className="w-full h-full object-contain scale-110" // object-contain mantém a proporção, scale-110 dá um zoom suave
+                      className="w-full h-full object-contain scale-110"
                     />
                   </div>
                 </div>
@@ -215,6 +267,36 @@ const LandingPage = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section (se você quiser adicionar) */}
+      <section id="features" className="border-t border-border bg-card/30 py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Recursos <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">Poderosos</span>
+            </h2>
+            <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
+              Tudo que você precisa para mestrar suas campanhas de RPG
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <div key={index} className="bg-background border border-border rounded-2xl p-6 hover:shadow-lg transition-shadow hover:border-accent/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <div className="text-accent">
+                      {feature.icon}
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">{feature.title}</h3>
+                </div>
+                <p className="text-foreground/60">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -282,42 +364,42 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer className="border-t border-border bg-card/50 py-12">
-  <div className="container mx-auto px-4">
-    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-      {/* Copyright */}
-      <div className="text-center md:text-left">
-        <p className="text-foreground/60">
-          © 2025 Maestrum. Todos os direitos reservados.
-        </p>
-      </div>
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Copyright */}
+            <div className="text-center md:text-left">
+              <p className="text-foreground/60">
+                © 2025 Maestrum. Todos os direitos reservados.
+              </p>
+            </div>
 
-      {/* Redes Sociais - WhatsApp e Instagram */}
-      <div className="flex items-center gap-4">
-        {/* WhatsApp */}
-        <a 
-          href="https://wa.me/5511999999999" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-10 h-10 rounded-full bg-foreground/10 hover:bg-green-500/20 hover:text-green-400 transition-all duration-300 flex items-center justify-center group"
-          aria-label="WhatsApp"
-        >
-          <MessageCircle className="w-5 h-5" />
-        </a>
+            {/* Redes Sociais - WhatsApp e Instagram */}
+            <div className="flex items-center gap-4">
+              {/* WhatsApp */}
+              <a 
+                href="https://wa.me/5511999999999" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-foreground/10 hover:bg-green-500/20 hover:text-green-400 transition-all duration-300 flex items-center justify-center group"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
 
-        {/* Instagram */}
-        <a 
-          href="https://instagram.com/maestrum" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-10 h-10 rounded-full bg-foreground/10 hover:bg-pink-500/20 hover:text-pink-400 transition-all duration-300 flex items-center justify-center group"
-          aria-label="Instagram"
-        >
-          <Instagram className="w-5 h-5" />
-        </a>
-      </div>
-    </div>
-  </div>
-</footer>
+              {/* Instagram */}
+              <a 
+                href="https://instagram.com/maestrum" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-foreground/10 hover:bg-pink-500/20 hover:text-pink-400 transition-all duration-300 flex items-center justify-center group"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
