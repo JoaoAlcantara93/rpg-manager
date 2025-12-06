@@ -617,41 +617,69 @@ const Initiative = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              {!combatStarted ? (
-                <Button 
-                  onClick={startCombat}
-                  className="bg-gradient-to-r from-primary to-accent 
-                           hover:from-primary/90 hover:to-accent/90
-                           border border-primary/30
-                           shadow-lg hover:shadow-xl hover:shadow-primary/20"
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Iniciar Combate
-                </Button>
-              ) : (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button 
-                    onClick={resetCombat}
-                    variant="outline"
-                    className="border-2 border-border hover:border-primary/50"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Reiniciar
-                  </Button>
-                  <Button 
-                    onClick={nextTurn}
-                    className="bg-gradient-to-r from-primary to-accent 
-                             hover:from-primary/90 hover:to-accent/90
-                             border border-primary/30
-                             shadow-lg hover:shadow-xl hover:shadow-primary/20"
-                  >
-                    <SkipForward className="w-4 h-4 mr-2" />
-                    Próximo Turno
-                  </Button>
-                </div>
-              )}
-            </div>
+  {!combatStarted ? (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button 
+        onClick={startCombat}
+        className="bg-gradient-to-r from-primary to-accent 
+                hover:from-primary/90 hover:to-accent/90
+                border border-primary/30
+                shadow-lg hover:shadow-xl hover:shadow-primary/20"
+      >
+        <Play className="w-5 h-5 mr-2" />
+        Iniciar Combate
+      </Button>
+      
+      <Button 
+        onClick={() => setDialogOpen(true)}
+        className="bg-gradient-to-r from-primary to-accent 
+                hover:from-primary/90 hover:to-accent/90
+                border border-primary/30
+                shadow-lg hover:shadow-xl hover:shadow-primary/20"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Adicionar NPC/Player
+      </Button>               
+    </div>
+  ) : (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button 
+        onClick={resetCombat}
+        variant="outline"
+        className="border-2 border-border hover:border-primary/50"
+      >
+        <RotateCcw className="w-4 h-4 mr-2" />
+        Parar
+      </Button>
+      
+      <Button 
+        onClick={nextTurn}
+        className="bg-gradient-to-r from-primary to-accent 
+                hover:from-primary/90 hover:to-accent/90
+                border border-primary/30
+                shadow-lg hover:shadow-xl hover:shadow-primary/20"
+      >
+        <SkipForward className="w-4 h-4 mr-2" />
+        Próximo Turno
+      </Button>
+      
+      <Button 
+        onClick={() => setDialogOpen(true)}
+        className="bg-gradient-to-r from-primary to-accent 
+                hover:from-primary/90 hover:to-accent/90
+                border border-primary/30
+                shadow-lg hover:shadow-xl hover:shadow-primary/20"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Add 
+      </Button>
+    </div>
+  )}
+</div>
+
+          
           </div>
+         
   
           {/* Card de Status do Combate */}
           {combatStarted && (
@@ -868,7 +896,7 @@ const Initiative = () => {
                                 e.stopPropagation();
                                 handleRemoveStatus(status.id);
                               }}
-                              className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                              className="ml-1 hover:bg-black/50 rounded-full p-0.5"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -913,24 +941,28 @@ const Initiative = () => {
             )}
           </div>
   
-          {/* Card de Rolagem Rápida */}
-          <Card className="mt-6 border-2 border-border bg-card/80">
-            <CardHeader className="p-6 border-b border-border/50">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10">
-                  <Dices className="w-6 h-6 text-primary" />
-                </div>
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Rolagem Rápida
-                </span>
-              </CardTitle>
-              <CardDescription>
-                Role dados rapidamente durante a sessão
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+         
+        </div>
+  
+        {/* Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+        
+        {/* Rolagem de dados */}
+        <Card className="border-2 border-border bg-card/80 sticky top-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Dices className="w-5 h-5 text-primary" />
+                  <span>Rolagem Rápida</span>
+                </CardTitle>
+                <CardDescription>
+                  Role dados rapidamente durante a sessão
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+
+                {/* Botões de Dados */}
+                <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
                   {[
                     { dice: '1d4', label: '1d4' },
                     { dice: '1d6', label: '1d6' },
@@ -944,59 +976,148 @@ const Initiative = () => {
                       onClick={() => rollDice(dice)}
                       variant="outline"
                       className="bg-primary/5 hover:bg-primary/10 border-2 border-primary/20 
-                               hover:border-primary/50 transition-all duration-200 
-                               min-w-[70px] text-sm py-3 h-auto"
+                                hover:border-primary/50 transition-all duration-200 
+                                min-w-[70px] text-sm py-3 h-auto"
                       size="sm"
                     >
                       {label}
                     </Button>
                   ))}
                 </div>
-  
-                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3">
-                  <div className="text-center sm:text-left">
-                    <div className="text-sm text-muted-foreground">Última rolagem</div>
-                    {lastRoll ? (
-                      <div className="flex items-center gap-2 justify-center sm:justify-start">
-                        <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
-                        <span className="text-2xl font-bold text-primary">{lastRoll.result}</span>
-                        {lastRoll.result === 20 && (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-full">
-                            🎯 Crítico!
-                          </span>
-                        )}
+
+                {/* Última Rolagem */}
+                {/* Resultado */}
+            <div className="text-center p-3 rounded-lg bg-card border border-border/50">
+              <div className="text-xs text-muted-foreground mb-1">Última rolagem</div>
+              {lastRoll ? (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm text-muted-foreground">{lastRoll.dice}</span>
+                    <span className="text-2xl font-bold text-primary">{lastRoll.result}</span>
+                  </div>
+                  {lastRoll.result === 20 && (
+                    <span className="inline-block text-xs bg-yellow-500/20 text-yellow-600 
+                                  px-2 py-1 rounded-full animate-pulse">
+                      🎯 Crítico!
+                    </span>
+                  )}
+                  {lastRoll.result === 1 && (
+                    <span className="inline-block text-xs bg-red-500/20 text-red-600 
+                                  px-2 py-1 rounded-full">
+                      💥 Falha!
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-sm text-muted-foreground">--</span>
+              )}
+            </div>
+
+              </CardContent>
+            </Card>
+          {/* Consulta de Status */}
+          <Card className="border-2 border-border bg-card/80">
+            <CardHeader className="p-6 border-b border-border/50">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-secondary" />
+                  <span>Consulta de Status</span>
+                </div>
+                {selectedStatus && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedStatus(null)}
+                    className="h-6 w-6 hover:bg-primary/10"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Procure e consulte a descrição dos status
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              {!selectedStatus ? (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Procurar status..."
+                      value={searchStatus}
+                      onChange={(e) => setSearchStatus(e.target.value)}
+                      className="pl-9 border-border/50 focus:border-primary"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                    {filteredStatusTypes.map((status) => (
+                      <div
+                        key={status.id}
+                        className="p-3 border border-border/50 rounded-lg hover:bg-primary/5 
+                                 hover:border-primary/50 cursor-pointer transition-all duration-200
+                                 bg-card/50"
+                        onClick={() => handleConsultStatus(status)}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: status.color }}
+                          />
+                          <span className="font-medium text-foreground">{status.name}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {status.description}
+                        </p>
                       </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">--</span>
+                    ))}
+                    
+                    {filteredStatusTypes.length === 0 && (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">Nenhum status encontrado</p>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: selectedStatus.color }}
+                    />
+                    <h3 className="font-bold text-lg text-foreground">{selectedStatus.name}</h3>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <p className="text-sm text-foreground/80">{selectedStatus.description}</p>
+                  </div>
+                  
+                  <Button
+                    onClick={() => setSelectedStatus(null)}
+                    variant="outline"
+                    className="w-full border-border hover:border-primary/50"
+                  >
+                    Voltar para a lista
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
-        </div>
   
-        {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Botão Adicionar Personagem */}
-          <Card className="border-2 border-border bg-card/80">
-            <CardContent className="p-6">
-              <Dialog open={dialogOpen} onOpenChange={(open) => {
+        
+        </div>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
                 setDialogOpen(open);
                 if (!open) resetForm();
               }}>
                 <DialogTrigger asChild>
-                  <Button 
-                    className="w-full bg-gradient-to-r from-primary to-accent 
-                             hover:from-primary/90 hover:to-accent/90
-                             border border-primary/30 shadow-lg hover:shadow-primary/20"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar à Iniciativa
-                  </Button>
+              
                 </DialogTrigger>
-                <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
-                                        shadow-[var(--shadow-glow)] max-w-2xl">
+                <DialogContent className="bg-card rounded-lg border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-xl">
                       Adicionar à Iniciativa
@@ -1179,143 +1300,6 @@ const Initiative = () => {
                   </form>
                 </DialogContent>
               </Dialog>
-            </CardContent>
-          </Card>
-  
-          {/* Consulta de Status */}
-          <Card className="border-2 border-border bg-card/80">
-            <CardHeader className="p-6 border-b border-border/50">
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-secondary" />
-                  <span>Consulta de Status</span>
-                </div>
-                {selectedStatus && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSelectedStatus(null)}
-                    className="h-6 w-6 hover:bg-primary/10"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Procure e consulte a descrição dos status
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              {!selectedStatus ? (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Procurar status..."
-                      value={searchStatus}
-                      onChange={(e) => setSearchStatus(e.target.value)}
-                      className="pl-9 border-border/50 focus:border-primary"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
-                    {filteredStatusTypes.map((status) => (
-                      <div
-                        key={status.id}
-                        className="p-3 border border-border/50 rounded-lg hover:bg-primary/5 
-                                 hover:border-primary/50 cursor-pointer transition-all duration-200
-                                 bg-card/50"
-                        onClick={() => handleConsultStatus(status)}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: status.color }}
-                          />
-                          <span className="font-medium text-foreground">{status.name}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {status.description}
-                        </p>
-                      </div>
-                    ))}
-                    
-                    {filteredStatusTypes.length === 0 && (
-                      <div className="text-center py-4">
-                        <p className="text-muted-foreground">Nenhum status encontrado</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: selectedStatus.color }}
-                    />
-                    <h3 className="font-bold text-lg text-foreground">{selectedStatus.name}</h3>
-                  </div>
-                  
-                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                    <p className="text-sm text-foreground/80">{selectedStatus.description}</p>
-                  </div>
-                  
-                  <Button
-                    onClick={() => setSelectedStatus(null)}
-                    variant="outline"
-                    className="w-full border-border hover:border-primary/50"
-                  >
-                    Voltar para a lista
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-  
-          {/* Acesso Rápido */}
-          <Card className="border-2 border-border bg-card/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-secondary" />
-                <span>Acesso Rápido</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.path}
-                    className="p-3 rounded-lg border border-border hover:border-primary/50 
-                             bg-card/50 hover:bg-card transition-all duration-300
-                             hover:shadow-[0_4px_12px_hsl(var(--primary)_/_0.1)] cursor-pointer
-                             group"
-                    onClick={() => navigate(item.path)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} 
-                                    group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">
-                          {item.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {item.description}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary 
-                                             group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </Layout>
   );
 };

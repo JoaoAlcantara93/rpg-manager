@@ -184,7 +184,7 @@ const Auth = () => {
                          focus:border-primary focus:ring-1 focus:ring-primary/30
                          placeholder:text-muted-foreground/50
                          transition-all duration-200"
-                placeholder="seu@email.com"
+                placeholder="mestre@email.com"
               />
             </div>
             
@@ -259,12 +259,7 @@ const Auth = () => {
             </Button>
           </div>
           
-          {/* Dica visual */}
-          <div className="mt-4 text-center">
-            <p className="text-xs text-muted-foreground/70">
-              <span className="text-primary">🐦 Dica:</span> O martim-pescador vê através das águas
-            </p>
-          </div>
+          
         </CardContent>
       </Card>
 

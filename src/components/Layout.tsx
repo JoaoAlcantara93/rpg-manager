@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Dices, Settings, Users, User, Home, Sword, BookOpen } from "lucide-react";
+import { LogOut, Dices, Settings, Users, User, Home, Sword, BookOpen, Swords } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -43,21 +43,12 @@ const Layout = ({
     navigate('/settings');
   };
 
-  const handleChangeCampaign = () => {
-    navigate('/campaign-select');
-  };
-
-  const handleDashboard = () => {
-    navigate('/dashboard');
-  };
-
-  const handleInitiative = () => {
-    navigate('/initiative');
-  };
-
-  const handleNotes = () => {
-    navigate('/notes');
-  };
+  const handleChangeCampaign = () => navigate('/campaign-select'); // seleção de campanha
+  const handleDashboard = () =>      navigate('/dashboard');       // tela de anotação/dashboard
+  const handleInitiative = () =>     navigate('/initiative');      // tela de iniciativa  
+  const handleNPCs = () =>           navigate('/npcs');            // tela de NPCs
+  const handlePlayers = () =>        navigate('/players');         // tela de Jogadores
+  const handleRules = () =>          navigate('/rules');           // regras
 
   return (
     <div className="min-h-screen relative">
@@ -103,7 +94,7 @@ const Layout = ({
                         className={`gap-2 ${currentPage === "dashboard" ? "bg-primary/10 text-primary" : ""}`}
                       >
                         <Home className="w-4 h-4" />
-                        Dashboard
+                        Anotações
                       </Button>
                       <Button
                         variant="ghost"
@@ -111,17 +102,26 @@ const Layout = ({
                         onClick={handleInitiative}
                         className="gap-2"
                       >
-                        <Sword className="w-4 h-4" />
+                        <Swords className="w-4 h-4" />
                         Iniciativa
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleNotes}
+                        onClick={handleNPCs}
                         className="gap-2"
                       >
-                        <BookOpen className="w-4 h-4" />
-                        Anotações
+                        <Users className="w-4 h-4" />
+                        NPCs
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handlePlayers}
+                        className="gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        Aventureiros
                       </Button>
                     </div>
                   )}
@@ -163,7 +163,7 @@ const Layout = ({
                         className="cursor-pointer hover:bg-primary/5"
                       >
                         <Home className="w-4 h-4 mr-2 text-primary" />
-                        Dashboard
+                        Anotações
                       </DropdownMenuItem>
                       
                       {/* Iniciativa */}
@@ -175,14 +175,24 @@ const Layout = ({
                         Iniciativa
                       </DropdownMenuItem>
                       
-                      {/* Anotações */}
+                      {/* NPCs */}
                       <DropdownMenuItem 
-                        onClick={handleNotes}
+                        onClick={handleNPCs}
                         className="cursor-pointer hover:bg-primary/5"
                       >
-                        <BookOpen className="w-4 h-4 mr-2 text-accent" />
-                        Anotações
+                        <Users className="w-4 h-4 mr-2 text-secondary" />
+                        NPCs
                       </DropdownMenuItem>
+
+                      {/* Aventureiros */}
+                      <DropdownMenuItem 
+                        onClick={handlePlayers}
+                        className="cursor-pointer hover:bg-primary/5"
+                      >
+                        <User className="w-4 h-4 mr-2 text-secondary" />
+                        Aventureiros
+                      </DropdownMenuItem>
+                     
                       
                       <DropdownMenuSeparator className="bg-border/50" />
                       
@@ -221,36 +231,38 @@ const Layout = ({
               
               {/* Navegação móvel */}
               {currentPage === "dashboard" && (
-                <div className="flex md:hidden items-center justify-center gap-1 mt-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDashboard}
-                    className={`flex-1 gap-2 ${currentPage === "dashboard" ? "bg-primary/10 text-primary" : ""}`}
-                  >
-                    <Home className="w-4 h-4" />
-                    Dashboard
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleInitiative}
-                    className="flex-1 gap-2"
-                  >
-                    <Sword className="w-4 h-4" />
-                    Iniciativa
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleNotes}
-                    className="flex-1 gap-2"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    Anotações
-                  </Button>
+                <div className="md:hidden mt-3 overflow-x-auto">
+                  <div className="flex items-center gap-1 px-1 pb-2 w-max">
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDashboard}
+                      className={`gap-2 ${currentPage === "dashboard" ? "bg-primary/10 text-primary" : ""}`}
+                    >
+                      <Home className="w-4 h-4" />
+                      Anotações
+                    </Button>
+
+                    <Button variant="ghost" size="sm" onClick={handleInitiative} className="gap-2">
+                      <Sword className="w-4 h-4" />
+                      Iniciativa
+                    </Button>
+
+                    <Button variant="ghost" size="sm" onClick={handleNPCs} className="gap-2">
+                      <Users className="w-4 h-4" />
+                      NPCs
+                    </Button>
+
+                    <Button variant="ghost" size="sm" onClick={handlePlayers} className="gap-2">
+                      <User className="w-4 h-4" />
+                      Aventureiros
+                    </Button>
+
+                  </div>
                 </div>
               )}
+
             </div>
           </header>
         )}

@@ -542,51 +542,7 @@ const NPCs = () => {
           )}
         </div>
   
-       {/* Sidebar com Acesso Rápido - CORRIGIDO PARA O PADRÃO DOS OUTROS */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-4 space-y-4">
-          <Card className="border-2 border-border bg-card/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-secondary" />
-                <span>Acesso Rápido</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.path}
-                    className="p-3 rounded-lg border border-border hover:border-primary/50 
-                             bg-card/50 hover:bg-card transition-all duration-300
-                             hover:shadow-[0_4px_12px_hsl(var(--primary)_/_0.1)] cursor-pointer
-                             group"
-                    onClick={() => navigate(item.path)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} 
-                                    group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">
-                          {item.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {item.description}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary 
-                                             group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-          </div>
-        </div>
+       
         </div>
   
       {/* Modal de Adicionar/Editar NPC */}

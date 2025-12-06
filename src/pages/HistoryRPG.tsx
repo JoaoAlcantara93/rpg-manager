@@ -853,206 +853,119 @@ const HistoryRPG = () => {
             </Card>
           )}
   
-          {/* Card de Rolagem Rápida */}
-          <Card className="mt-6 border-2 border-border bg-card/80">
-            <CardHeader className="p-4 sm:p-6 border-b border-border/50">
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10">
-                  <Dices className="w-5 h-5 text-primary" />
-                </div>
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Rolagem Rápida
-                </span>
-              </CardTitle>
-              <CardDescription>
-                Role dados rapidamente durante a sessão
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                  {[
-                    { dice: '1d4', label: '1d4' },
-                    { dice: '1d6', label: '1d6' },
-                    { dice: '1d8', label: '1d8' },
-                    { dice: '1d12', label: '1d12' },
-                    { dice: '1d20', label: '1d20' },
-                    { dice: '1d100', label: '1d100' },
-                  ].map(({ dice, label }) => (
-                    <Button
-                      key={dice}
-                      onClick={() => rollDice(dice)}
-                      variant="outline"
-                      className="bg-primary/5 hover:bg-primary/10 border-2 border-primary/20 
-                               hover:border-primary/50 transition-all duration-200 
-                               min-w-[70px] text-sm py-3 h-auto"
-                      size="sm"
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-  
-                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3">
-                  <div className="text-center sm:text-left">
-                    <div className="text-sm text-muted-foreground">Última rolagem</div>
-                    {lastRoll ? (
-                      <div className="flex items-center gap-2 justify-center sm:justify-start">
-                        <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
-                        <span className="text-2xl font-bold text-primary">{lastRoll.result}</span>
-                        {lastRoll.result === 20 && (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-full">
-                            🎯 Crítico!
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">--</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        
         </div>
   
         {/* Sidebar - Visão Rápida */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Estatísticas Rápidas */}
-          {selectedCampaignId && (
-            <Card className="border-2 border-border bg-card/80">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" />
-                  <span>Estatísticas</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                    <div className="text-2xl font-bold text-primary">
-                      {notes.filter(n => n.note_type === 'adventure').length}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">📚 Aventuras</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10">
-                    <div className="text-2xl font-bold text-green-600">
-                      {notes.filter(n => n.note_type === 'session').length}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">🎲 Sessões</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {notes.filter(n => n.note_type === 'idea').length}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">💡 Ideias</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {allTags.length}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">🏷️ Tags</div>
-                  </div>
-                </div>
-                
-                {/* Botão Nova Anotação */}
-                <Dialog open={dialogOpen} onOpenChange={(open) => {
-                  setDialogOpen(open);
-                  if (!open) resetForm();
-                }}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className="w-full bg-gradient-to-r from-primary to-accent 
-                               hover:from-primary/90 hover:to-accent/90
-                               border border-primary/30 shadow-lg hover:shadow-primary/20"
-                      disabled={!selectedCampaignId}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nova Anotação
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
-              </CardContent>
-            </Card>
-          )}
-  
-          {/* Acesso Rápido */}
+
+      
+
+        {/* Última Sessão */}
+        {lastSession && (
           <Card className="border-2 border-border bg-card/80">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-secondary" />
-                <span>Acesso Rápido</span>
+                <Clock className="w-5 h-5 text-accent" />
+                <span>Última Sessão</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.path}
-                    className="p-3 rounded-lg border border-border hover:border-primary/50 
-                             bg-card/50 hover:bg-card transition-all duration-300
-                             hover:shadow-[0_4px_12px_hsl(var(--primary)_/_0.1)] cursor-pointer
-                             group"
-                    onClick={() => navigate(item.path)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gradient-to-br ${item.gradient} 
-                                    group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm group-hover:text-primary transition-colors">
-                          {item.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {item.description}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary 
-                                             group-hover:translate-x-1 transition-all" />
-                    </div>
+            <CardContent>
+              <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
+                <div className="font-semibold text-primary flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  Sessão {lastSession.session_number}
+                </div>
+
+                {lastSession.session_title && (
+                  <div className="text-sm font-medium mt-1">
+                    {lastSession.session_title}
                   </div>
-                );
-              })}
+                )}
+
+                <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {lastSession.title}
+                </div>
+
+                <div className="text-xs text-muted-foreground/70 mt-2">
+                  📅 {new Date(lastSession.updated_at).toLocaleDateString("pt-BR")}
+                </div>
+              </div>
             </CardContent>
           </Card>
-  
-          {/* Última Sessão */}
-          {lastSession && (
-            <Card className="border-2 border-border bg-card/80">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-accent" />
-                  <span>Última Sessão</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
-                    <div className="font-semibold text-primary flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      Sessão {lastSession.session_number}
-                    </div>
-                    {lastSession.session_title && (
-                      <div className="text-sm font-medium mt-1">
-                        {lastSession.session_title}
-                      </div>
-                    )}
-                    <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {lastSession.title}
-                    </div>
-                    <div className="text-xs text-muted-foreground/70 mt-2">
-                      📅 {new Date(lastSession.updated_at).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        )}
+
+        {/* Rolagem Rápida  */}
+        <Card className="border-2 border-border bg-card/80 sticky top-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Dices className="w-5 h-5 text-primary" />
+              <span>Rolagem Rápida</span>
+            </CardTitle>
+            <CardDescription>
+              Role dados rapidamente durante a sessão
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+
+            {/* Botões de Dados */}
+            <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
+              {[
+                { dice: '1d4', label: '1d4' },
+                { dice: '1d6', label: '1d6' },
+                { dice: '1d8', label: '1d8' },
+                { dice: '1d12', label: '1d12' },
+                { dice: '1d20', label: '1d20' },
+                { dice: '1d100', label: '1d100' },
+              ].map(({ dice, label }) => (
+                <Button
+                  key={dice}
+                  onClick={() => rollDice(dice)}
+                  variant="outline"
+                  className="bg-primary/5 hover:bg-primary/10 border-2 border-primary/20 
+                            hover:border-primary/50 transition-all duration-200 
+                            min-w-[70px] text-sm py-3 h-auto"
+                  size="sm"
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Última Rolagem */}
+            {/* Resultado */}
+        <div className="text-center p-3 rounded-lg bg-card border border-border/50">
+          <div className="text-xs text-muted-foreground mb-1">Última rolagem</div>
+          {lastRoll ? (
+            <div className="space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-sm text-muted-foreground">{lastRoll.dice}</span>
+                <span className="text-2xl font-bold text-primary">{lastRoll.result}</span>
+              </div>
+              {lastRoll.result === 20 && (
+                <span className="inline-block text-xs bg-yellow-500/20 text-yellow-600 
+                               px-2 py-1 rounded-full animate-pulse">
+                  🎯 Crítico!
+                </span>
+              )}
+              {lastRoll.result === 1 && (
+                <span className="inline-block text-xs bg-red-500/20 text-red-600 
+                               px-2 py-1 rounded-full">
+                  💥 Falha!
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-sm text-muted-foreground">--</span>
           )}
         </div>
+
+          </CardContent>
+        </Card>
+
+        </div>
+
       </div>
     </Layout>
   
