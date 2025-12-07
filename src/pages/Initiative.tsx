@@ -942,7 +942,7 @@ const Initiative = () => {
         <div className="lg:col-span-1 space-y-6">
         
         {/* Rolagem de dados */}
-        <Card className="border-2 border-border bg-card/80 sticky top-4">
+        <Card className="border-2 border-border bg-card/80">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Dices className="w-5 h-5 text-primary" />
@@ -1014,7 +1014,7 @@ const Initiative = () => {
             <CardHeader className="p-6 border-b border-border/50">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-secondary" />
+                  <Search className="w-5 h-5 text-secondary" />
                   <span>Consulta de Status</span>
                 </div>
                 {selectedStatus && (

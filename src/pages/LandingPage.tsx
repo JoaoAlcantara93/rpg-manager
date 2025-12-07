@@ -24,46 +24,27 @@ import {
   Shield as BestiaryIcon
 } from 'lucide-react';
 
+import { useTheme } from "@/hooks/use-theme";
+
+
+
 const LandingPage = () => {
+  const { darkMode, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
-
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const root = document.documentElement;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setDarkMode(true);
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const toggleTheme = () => {
-    setDarkMode(prev => {
-      const newValue = !prev;
-      const root = document.documentElement;
+  
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
       
-      if (newValue) {
-        root.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        root.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      return newValue;
-    });
-  };
+
+ 
 
   const handleGetStarted = () => {
     navigate('/login');
@@ -213,6 +194,7 @@ const LandingPage = () => {
                 <Moon className="w-5 h-5 text-foreground/80" />
               )}
             </button>
+
             
             <button 
               onClick={handleGetStarted} 

@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Dices, Settings, Users, User, Home, Sword, BookOpen, Swords } from "lucide-react";
+import { LogOut, Dices, Settings, Users, User, Home, Sword, BookOpen, Swords, Sun, Moon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import BackgroundEffects from "./BackgroundEffects";
+import { useTheme } from "@/hooks/use-theme";
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,6 +29,8 @@ const Layout = ({
   currentPage = "dashboard"
 }: LayoutProps) => {
   const navigate = useNavigate();
+
+  const { darkMode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -134,7 +137,18 @@ const Layout = ({
                       Mestre da campanha
                     </span>
                   </div>
-                  
+                  <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-lg bg-card border border-border hover:bg-accent/10 transition-colors"
+                    aria-label={darkMode ? "Alternar para modo claro" : "Alternar para modo escuro"}
+                  >
+                    {darkMode ? (
+                      <Sun className="w-5 h-5 text-yellow-500" />
+                    ) : (
+                      <Moon className="w-5 h-5 text-foreground/80" />
+                    )}
+                  </button>
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button 
