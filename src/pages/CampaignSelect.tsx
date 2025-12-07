@@ -89,12 +89,7 @@ const CampaignSelect: React.FC = () => {
     try {
       // Salvar no localStorage
       localStorage.setItem('current-campaign', campaignId);
-      //console.log("💾 Campanha salva no localStorage:", campaignId);
-      
-      toast.success("Campanha selecionada!");
-      
-      // Navegar para o dashboard
-     // console.log("🚀 Navegando para /dashboard");
+          
       navigate('/dashboard');
       
     } catch (error) {
@@ -104,13 +99,13 @@ const CampaignSelect: React.FC = () => {
   };
 
   const handleCreateCampaign = () => {
-    console.log("➕ Navegando para criar nova campanha");
+    //➕ Navegando para criar nova campanha
     navigate('/campaigns/new');
   };
 
   const handleEditCampaign = (e: React.MouseEvent, campaignId: string) => {
+    //✏️ Editando campanha...
     e.stopPropagation();
-    console.log("✏️ Editando campanha:", campaignId);
     navigate(`/campaigns/edit/${campaignId}`);
   };
 
@@ -175,14 +170,7 @@ const CampaignSelect: React.FC = () => {
                 <p className="text-muted-foreground">
                   Clique em uma campanha para gerenciá-la
                 </p>
-              </div>
-              <Button
-                onClick={handleCreateCampaign}
-                className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap  mt-4"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Campanha
-              </Button>
+              </div>              
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -118,7 +118,7 @@ const Initiative = () => {
   // Adicionar debug para verificar a campanha atual
   useEffect(() => {
     const campaignId = localStorage.getItem('current-campaign');
-    console.log('🔄 Campaign ID no localStorage:', campaignId);
+//    console.log('🔄 Campaign ID no localStorage:', campaignId);
   }, []);
 
   const fetchAvailableCharacters = async (type: 'player' | 'npc') => {
@@ -126,7 +126,7 @@ const Initiative = () => {
       setLoadingCharacters(true);
       const campaignId = localStorage.getItem('current-campaign');
       
-      console.log('📋 Buscando personagens para campanha:', campaignId, 'Tipo:', type);
+      //📋 Buscando personagens para campanha
       
       if (!campaignId) {
         toast.error("Nenhuma campanha selecionada");
@@ -142,7 +142,7 @@ const Initiative = () => {
   
         if (error) throw error;
         
-        console.log('🎯 Jogadores encontrados:', data);
+        //🎯 Jogadores encontrados
         
         const mappedData = (data || []).map(player => ({
           id: player.id,
@@ -161,18 +161,16 @@ const Initiative = () => {
           .order('name');
   
         if (error) throw error;
-        
-        console.log('👹 NPCs encontrados:', data);
         setAvailableCharacters(data || []);
       }
     } catch (error: any) {
-      console.error("Erro ao buscar personagens:", error);
+
       toast.error("Erro ao buscar personagens");
     } finally {
       setLoadingCharacters(false);
     }
   };
-
+  // rolagem dos dados
   const rollDice = (dice: string) => {
     let result = 0;
     
@@ -229,8 +227,6 @@ const Initiative = () => {
   const fetchCharacters = async () => {
     try {
       const campaignId = localStorage.getItem('current-campaign');
-      
-      console.log('🎲 Buscando iniciativa para campanha:', campaignId);
       
       if (!campaignId) {
         toast.error("Nenhuma campanha selecionada");
@@ -305,7 +301,7 @@ const Initiative = () => {
     setCurrentTurn(1);
     setTotalTurns(1);
     setCombatTime(0);
-    toast.success("Combate iniciado!");
+    
   };
 
   const nextTurn = () => {
@@ -329,7 +325,6 @@ const Initiative = () => {
     setCurrentTurn(0);
     setTotalTurns(0);
     setCombatTime(0);
-    toast.info("Combate reiniciado");
   };
 
   const formatTime = (seconds: number) => {
@@ -438,7 +433,6 @@ const Initiative = () => {
       setQuantity(1);
       fetchCharacters();
     } catch (error: any) {
-      console.error("Erro ao adicionar personagem:", error);
       toast.error(error.message || "Erro ao adicionar personagem");
     }
   };

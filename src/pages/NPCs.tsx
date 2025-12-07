@@ -330,9 +330,7 @@ const NPCs = () => {
             </div>
           </div>
         </div>
-        
-       
-        
+
         {/* LISTA DE NPCS */}
         {npcs.length === 0 ? (
           /* ESTADO VAZIO - Sem NPCs */
@@ -425,73 +423,40 @@ const NPCs = () => {
                   className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-xl hover:border-accent/50 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden flex flex-col min-h-[450px]"
                 >
                   {/* Banner com imagem grande no topo */}
-                  <div className="relative h-32 bg-gradient-to-r from-muted/30 to-muted/10 overflow-hidden">
-                    {npc.image_url ? (
-                      <img 
-                        src={npc.image_url} 
-                        alt={npc.name}
-                        className="w-full h-full object-cover object-top"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback') as HTMLElement;
-                          if (fallback) fallback.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <div className={`${npc.image_url ? 'hidden' : ''} image-fallback w-full h-full flex items-center justify-center`}>
-                      <Users className="w-16 h-16 text-muted-foreground/20" />
-                    </div>
-                    
-                    {/* Overlay escuro para contraste do texto */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-16"></div>
-                    
-                    {/* Nome sobre a imagem */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          healthPercentage > 75 ? 'bg-green-500' :
-                          healthPercentage > 25 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`} />
-                        <h3 className="text-xl font-bold text-white truncate">{npc.name}</h3>
-                      </div>
-                    </div>
-                    
-                    {/* Botões de ação no canto superior direito */}
-                    <div className="absolute top-3 right-3 flex gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuickHeal(npc.id, 5);
-                        }}
-                        className="p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-lg transition-colors backdrop-blur-sm"
-                        title="Curar 5 HP"
-                      >
-                        +5
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleQuickDamage(npc.id, 5);
-                        }}
-                        className="p-1.5 bg-black/40 hover:bg-black/60 text-destructive rounded-lg transition-colors backdrop-blur-sm"
-                        title="Causar 5 de dano"
-                      >
-                        -5
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(npc);
-                        }}
-                        className="p-1.5 bg-black/40 hover:bg-black/60 text-primary rounded-lg transition-colors backdrop-blur-sm"
-                        title="Editar"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                  <div className="relative h-40 overflow-hidden">
+                  {/* Fundo borrado */}
+                  <div 
+                    className="absolute inset-0 bg-center bg-cover blur-lg scale-110"
+                    style={{ backgroundImage: `url(${npc.image_url})` }}
+                  />
+
+                  {/* Overlay escuro */}
+                  <div className="absolute inset-0 bg-black/40" />
+
+                  {/* Imagem principal */}
+                  <img
+                    src={npc.image_url}
+                    alt={npc.name}
+                    className="relative z-10 mx-auto h-full object-contain"
+                  />
+                </div>
+
                   
                   {/* Conteúdo abaixo da imagem */}
+
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-border bg-card/70 backdrop-blur-sm">
+                    <h3 className="text-base font-semibold leading-tight truncate">
+                      {npc.name}
+                    </h3>
+
+                    {npc.race && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {npc.race} {npc.class && `• ${npc.class}`}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="p-6 flex-1">
                     
                     {/* Barra de HP Visual */}
@@ -641,12 +606,15 @@ const NPCs = () => {
                               
                               {/* Footer com Ações */}
                               <div className="border-t border-border bg-card/50 px-4 py-3 mt-auto flex justify-between">
-                                <button
-                                  onClick={() => exportToCombat()}
-                                  className="text-xs px-3 py-1.5 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-lg transition-colors flex items-center gap-1"
+                              <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEdit(npc);
+                                  }}
+                                  className="text-xs px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-1"
                                 >
-                                  <Sword className="w-3 h-3" />
-                                  Combate
+                                  <Pencil className="w-3 h-3" />
+                                  Editar
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -749,7 +717,8 @@ const NPCs = () => {
                   </div>
                 </div>
               </div>
-              
+             
+
               {/* Seção: Vitalidade */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-destructive flex items-center gap-2">
