@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Dices, Settings, Users, User, Home, Sword, BookOpen, Swords, Sun, Moon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useProfile } from "@/hooks/user-profile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,7 @@ const Layout = ({
   currentPage = "dashboard"
 }: LayoutProps) => {
   const navigate = useNavigate();
-
+  const { profile, loading } = useProfile()
   const { darkMode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -52,6 +53,7 @@ const Layout = ({
   const handleNPCs = () =>           navigate('/npcs');            // tela de NPCs
   const handlePlayers = () =>        navigate('/players');         // tela de Jogadores
   const handleRules = () =>          navigate('/rules');           // regras
+  
 
   return (
     <div className="min-h-screen relative">
@@ -133,9 +135,12 @@ const Layout = ({
                 {/* Menu Dropdown do Usuário */}
                 <div className="flex items-center gap-3">
                   <div className="hidden sm:block">
+                  <div className="hidden sm:block">
                     <span className="text-sm text-muted-foreground">
-                      Mestre da campanha
+                      {loading ? "Mestre..." : `Mestre ${profile?.username ?? ""}`}
                     </span>
+                  </div>
+
                   </div>
                   <button
                     onClick={toggleTheme}

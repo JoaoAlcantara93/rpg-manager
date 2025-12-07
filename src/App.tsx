@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import CampaignSelect from "./pages/CampaignSelect"; // NOVO
 import CampaignForm from "./pages/CampaignForm"; // NOVO
 import LandingPage from "./pages/LandingPage";
+import ProfileConfig from "./pages/ProfileConfig";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,8 @@ const App = () => (
           
           /* Landing Page*/
           <Route path="/login" element={<Auth />} />
+          {/* Tela de configuração*/}
+          <Route path="/settings" element={<ProfileConfig />} />
           
           {/* Rota catch-all */}
           <Route path="*" element={<NotFound />} />
