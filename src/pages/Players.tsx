@@ -1,11 +1,26 @@
 // src/pages/Players.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dices, ArrowLeft, Plus, Pencil, Trash2, Users,User, Swords, BookOpen, MapPin, Book , ChevronRight, Zap} from "lucide-react";
+import { 
+  Dices, 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  User, 
+  Users, 
+  Swords, 
+  Zap,
+  ChevronRight,
+  Heart,
+  Shield,
+  Eye,
+  Sword,
+  Brain,
+  Activity
+} from "lucide-react";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Player {
   id: string;
@@ -35,64 +50,27 @@ const Players = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     name: "",
     character_class: "",
-    level: "",
+    level: "1",
     attributes: "{}",
     hp_current: "",
     hp_max: "",
-    ac: "",
-    fortitude_save: "",
-    will_save: "",
-    reflex_save: "",
-    perception: "",
+    ac: "10",
+    fortitude_save: "0",
+    will_save: "0",
+    reflex_save: "0",
+    perception: "0",
     notes: "",
     observation: ""
   });
 
-  const menuItems = [
-    {
-      title: "NPCs",
-      description: "Gerencie seus NPCs",
-      icon: Users,
-      path: "/npcs",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Anotações",
-      description: "Gerencie suas anotações",
-      icon: BookOpen,
-      path: "/dashboard",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Combate",
-      description: "Gerencie os combates",
-      icon: Swords,
-      path: "/initiative",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Mapas",
-      description: "Consule mapas",
-      icon: MapPin,
-      path: "*",
-      gradient: "from-secondary to-accent",
-    },   
-    {
-      title: "Regras",
-      description: "Em desenvolvimento - Em breve!", 
-      icon: Book,
-      path: "#",
-      gradient: "from-secondary to-accent", 
-      disabled: true
-    },
-  ];
+  const [showEmptyCard] = useState(true);
 
   useEffect(() => {
     const campaignId = localStorage.getItem('current-campaign');
-    console.log("🎯 Campaign ID do localStorage:", campaignId);
     setCurrentCampaignId(campaignId);
     
     if (campaignId) {
@@ -105,43 +83,18 @@ const Players = () => {
 
   const fetchPlayers = async (campaignId: string) => {
     try {
-      console.log("🔄 Buscando Players para campanha:", campaignId);
-      
       const { data, error } = await supabase
         .from('players')
-        .select(`
-          id,
-          campaign_id,
-          user_id,
-          name,
-          character_class,
-          level,
-          attributes,
-          hp_current,
-          hp_max,
-          ac,
-          fortitude_save,
-          will_save,
-          reflex_save,
-          perception,
-          notes,
-          observation,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .eq('campaign_id', campaignId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("❌ Erro ao carregar Players:", error);
-        throw error;
-      }
-
-      console.log("✅ Players carregados:", data);
+      if (error) throw error;
+      
       setPlayers(data || []);
     } catch (error) {
       console.error("Erro ao carregar Players:", error);
-      toast.error("Erro ao carregar Players");
+      toast.error("Erro ao carregar aventureiros");
     } finally {
       setLoading(false);
     }
@@ -156,21 +109,11 @@ const Players = () => {
         return;
       }
 
-      console.log("💾 Iniciando salvamento do Player...");
-
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (authError) {
-        console.error("❌ Erro de autenticação:", authError);
+      if (authError || !user) {
         throw new Error("Usuário não autenticado");
       }
-
-      if (!user) {
-        console.error("❌ Nenhum usuário autenticado");
-        throw new Error("Usuário não autenticado");
-      }
-
-      console.log("👤 Usuário autenticado:", user.id);
 
       const playerData = {
         campaign_id: currentCampaignId,
@@ -190,86 +133,39 @@ const Players = () => {
         observation: formData.observation || null
       };
 
-      console.log("📤 Dados a serem enviados para o Supabase:", playerData);
-
+      let result;
       if (editingPlayer) {
         const { data, error } = await supabase
           .from('players')
           .update(playerData)
           .eq('id', editingPlayer.id)
-          .select(`
-            id,
-            campaign_id,
-            user_id,
-            name,
-            character_class,
-            level,
-            attributes,
-            hp_current,
-            hp_max,
-            ac,
-            fortitude_save,
-            will_save,
-            reflex_save,
-            perception,
-            notes,
-            observation,
-            created_at,
-            updated_at
-          `)
+          .select()
           .single();
 
-        if (error) {
-          console.error("❌ Erro ao atualizar Player:", error);
-          throw error;
-        }
-
-        console.log("✅ Player atualizado:", data);
-      //  setPlayers(players.map(player => 
-      //    player.id === editingPlayer.id ? data : player
-      //  ));
+        if (error) throw error;
+        result = data;
+        
+        setPlayers(players.map(p => p.id === editingPlayer.id ? data : p));
         toast.success("Aventureiro atualizado com sucesso!");
       } else {
         const { data, error } = await supabase
           .from('players')
           .insert([playerData])
-          .select(`
-            id,
-            campaign_id,
-            user_id,
-            name,
-            character_class,
-            level,
-            attributes,
-            hp_current,
-            hp_max,
-            ac,
-            fortitude_save,
-            will_save,
-            reflex_save,
-            perception,
-            notes,
-            observation,
-            created_at,
-            updated_at
-          `)
+          .select()
           .single();
 
-        if (error) {
-          console.error("❌ Erro ao criar Player:", error);
-          throw error;
-        }
-
-        console.log("✅ Player criado:", data);
-        //setPlayers([data, ...players]);
+        if (error) throw error;
+        result = data;
+        
+        setPlayers([result, ...players]);
         toast.success("Aventureiro criado com sucesso!");
       }
 
       setDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error("❌ Erro ao salvar Player:", error);
-      toast.error(`Erro ao salvar aventureiro: ${error.message}`);
+      console.error("Erro ao salvar Player:", error);
+      toast.error(`Erro ao salvar: ${error.message}`);
     }
   };
 
@@ -279,7 +175,9 @@ const Players = () => {
       name: player.name,
       character_class: player.character_class || "",
       level: (player.level || 1).toString(),
-      attributes: typeof player.attributes === 'string' ? player.attributes : JSON.stringify(player.attributes || {}, null, 2),
+      attributes: typeof player.attributes === 'string' 
+        ? player.attributes 
+        : JSON.stringify(player.attributes || {}, null, 2),
       hp_current: (player.hp_current || 0).toString(),
       hp_max: (player.hp_max || 0).toString(),
       ac: (player.ac || 10).toString(),
@@ -297,46 +195,107 @@ const Players = () => {
     if (!confirm("Tem certeza que deseja excluir este aventureiro?")) return;
 
     try {
-      console.log("🗑️ Excluindo Player:", id);
       const { error } = await supabase
         .from('players')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error("❌ Erro ao excluir Player:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       setPlayers(players.filter(player => player.id !== id));
       toast.success("Aventureiro excluído com sucesso!");
     } catch (error: any) {
-      console.error("❌ Erro ao excluir Player:", error);
-      toast.error(`Erro ao excluir aventureiro: ${error.message}`);
+      toast.error(`Erro ao excluir: ${error.message}`);
     }
+  };
+
+  const handleQuickHeal = async (playerId: string, amount: number) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+    
+    const newHp = Math.min(
+      (player.hp_current || 0) + amount,
+      player.hp_max || 0
+    );
+    
+    await updatePlayerHP(playerId, newHp);
+    toast.success(`${player.name} curado em ${amount} HP`);
+  };
+
+  const handleQuickDamage = async (playerId: string, amount: number) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+    
+    const newHp = Math.max(0, (player.hp_current || 0) - amount);
+    
+    await updatePlayerHP(playerId, newHp);
+    toast.warning(`${player.name} sofreu ${amount} de dano`);
+    
+    if (newHp < (player.hp_max || 1) * 0.25) {
+      toast.error(`${player.name} está em estado crítico!`);
+    }
+  };
+
+  const updatePlayerHP = async (playerId: string, newHp: number) => {
+    try {
+      const { error } = await supabase
+        .from('players')
+        .update({ hp_current: newHp })
+        .eq('id', playerId);
+
+      if (error) throw error;
+      
+      setPlayers(players.map(p => 
+        p.id === playerId ? { ...p, hp_current: newHp } : p
+      ));
+    } catch (error) {
+      toast.error("Erro ao atualizar HP");
+    }
+  };
+
+  const exportToCombat = () => {
+    const combatData = players.map(p => ({
+      name: p.name,
+      hp_current: p.hp_current,
+      hp_max: p.hp_max,
+      ac: p.ac,
+      perception: p.perception,
+      initiative: 0
+    }));
+    
+    localStorage.setItem('combat-export', JSON.stringify(combatData));
+    navigate('/initiative');
+    toast.success('Aventureiros exportados para o combate!');
   };
 
   const resetForm = () => {
     setFormData({ 
       name: "", 
       character_class: "",
-      level: "",
+      level: "1",
       attributes: "{}",
       hp_current: "",
       hp_max: "",
-      ac: "",
-      fortitude_save: "",
-      will_save: "",
-      reflex_save: "",
-      perception: "",
+      ac: "10",
+      fortitude_save: "0",
+      will_save: "0",
+      reflex_save: "0",
+      perception: "0",
       notes: "",
       observation: ""
     });
     setEditingPlayer(null);
   };
 
-  const handleBackToDashboard = () => {
-    navigate("/dashboard");
+  const getHealthPercentage = (player: Player) => {
+    if (!player.hp_max) return 0;
+    return ((player.hp_current || 0) / player.hp_max) * 100;
+  };
+
+  const getHealthColor = (percentage: number) => {
+    if (percentage > 75) return "from-green-500 to-green-400";
+    if (percentage > 25) return "from-yellow-500 to-yellow-400";
+    return "from-red-500 to-red-400";
   };
 
   if (loading) {
@@ -354,161 +313,393 @@ const Players = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Conteúdo principal */}
-        <div className="lg:col-span-3">
+      <div className="max-w-7xl mx-auto">
+        {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 
-                            border border-primary/20">
-                <User className="w-8 h-8 text-primary" />
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+              <User className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold mb-2">
+                <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                  Aventureiros
+                </span>
+              </h2>
+              <p className="text-muted-foreground">Gerencie os aventureiros da campanha</p>
+            </div>
+          </div>
+      
+        </div>
+        
+        {/* Dashboard de Status */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-card to-card/80 border-2 border-border rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold mb-2">
-                  <span className="bg-gradient-to-r from-primary via-secondary to-accent 
-                                 bg-clip-text text-transparent">
-                    Aventureiros
-                  </span>
-                </h2>
-                <p className="text-muted-foreground">Gerencie os aventureiros dessa camapanha</p>
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold">{players.length}</p>
               </div>
             </div>
-            <button
-              onClick={() => setDialogOpen(true)}
-             className="px-6 py-3 bg-gradient-to-r from-secondary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Novo Aventureiro
-            </button>
-           
           </div>
-          
-            
-          {/* Lista de Players */}
-          {players.length === 0 ? (
-            <div className="border-2 border-dashed border-border rounded-lg bg-card/50">
-              <div className="py-12 text-center">
-                <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">Nenhum aventureiro criado ainda</p>
-                <button
-                  onClick={() => setDialogOpen(true)}
-                  className="mt-4 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center mx-auto"
-                >
+
+          <div className="bg-gradient-to-br from-card to-card/80 border-2 border-border rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-secondary/10 rounded-lg">
+                <Zap className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Nível Médio</p>
+                <p className="text-2xl font-bold">
+                  {players.length > 0 
+                    ? Math.round(players.reduce((acc, p) => acc + (p.level || 1), 0) / players.length)
+                    : 0
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-card to-card/80 border-2 border-border rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <Swords className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">HP Total</p>
+                <p className="text-2xl font-bold">
+                  {players.reduce((acc, p) => acc + (p.hp_max || 0), 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-card to-card/80 border-2 border-border rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <Activity className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Feridos</p>
+                <p className="text-2xl font-bold text-destructive">
+                  {players.filter(p => getHealthPercentage(p) < 50).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* LISTA DE AVENTUREIROS */}
+        {players.length === 0 ? (
+          /* ESTADO VAZIO - Sem players */
+          <div className="max-w-md mx-auto">
+            <div 
+              onClick={() => setDialogOpen(true)}
+              className="border-3 border-dashed border-border hover:border-accent/50 bg-gradient-to-br from-card/30 to-card/10 rounded-xl hover:shadow-xl transition-all duration-300 cursor-pointer group min-h-[400px] flex flex-col items-center justify-center p-8"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                  <User className="w-10 h-10 text-primary group-hover:text-accent transition-colors" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-accent transition-colors">
+                  Adicionar Primeiro Aventureiro
+                </h3>
+                <p className="text-muted-foreground mb-6 max-w-sm">
+                  Comece sua campanha adicionando os personagens jogadores. Você pode adicionar detalhes depois.
+                </p>
+                
+                <div className="bg-card/50 border border-border rounded-lg p-4 mb-6">
+                  <p className="text-sm text-muted-foreground mb-2">Exemplo de informações úteis:</p>
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div className="text-center p-2 bg-primary/10 rounded">
+                      <div className="font-bold">CA</div>
+                      <div>16-18</div>
+                    </div>
+                    <div className="text-center p-2 bg-secondary/10 rounded">
+                      <div className="font-bold">HP</div>
+                      <div>25-40</div>
+                    </div>
+                    <div className="text-center p-2 bg-accent/10 rounded">
+                      <div className="font-bold">PER</div>
+                      <div>+5-7</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <button className="px-8 py-3 bg-gradient-to-r from-primary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground font-semibold rounded-lg transition-all duration-200 flex items-center mx-auto">
                   <Plus className="w-5 h-5 mr-2" />
                   Criar Primeiro Aventureiro
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {players.map((player) => (
+          </div>
+        ) : (
+          /* COM PLAYERS - Grid com cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Card vazio para adicionar novo - SEMPRE no início */}
+            {showEmptyCard && (
+              <div 
+                onClick={() => setDialogOpen(true)}
+                className="border-2 border-dashed border-border hover:border-accent/50 bg-gradient-to-br from-card/30 to-card/10 rounded-lg hover:shadow-lg transition-all duration-300 cursor-pointer group min-h-[300px] flex flex-col items-center justify-center order-first"
+              >
+                <div className="text-center p-8">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Plus className="w-8 h-8 text-primary group-hover:text-accent transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground group-hover:text-accent transition-colors">
+                    Novo Aventureiro
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    Clique para adicionar um novo aventureiro à campanha
+                  </p>
+                  
+                  <div className="mt-6 text-xs text-muted-foreground">
+                    <p className="mb-1">Dica rápida:</p>
+                    <ul className="space-y-1 text-left">
+                      <li className="flex items-center gap-1">
+                        <ChevronRight className="w-3 h-3" />
+                        <span>Comece apenas com nome e classe</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <ChevronRight className="w-3 h-3" />
+                        <span>Adicione detalhes durante o jogo</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Players existentes */}
+            {players.map((player) => {
+              const healthPercentage = getHealthPercentage(player);
+              const healthColor = getHealthColor(healthPercentage);
+              
+              return (
                 <div 
                   key={player.id} 
-                  className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-lg hover:border-accent/50 transition-all shadow-lg"
+                  className="border-2 border-border bg-gradient-to-br from-card to-card/80 rounded-xl hover:border-accent/50 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden flex flex-col min-h-[400px]"
                 >
+                  {/* Cabeçalho do Card */}
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-foreground truncate flex-1">{player.name}</h3>
-                      <div className="flex gap-2 ml-4">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            healthPercentage > 75 ? 'bg-green-500' :
+                            healthPercentage > 25 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`} />
+                          <h3 className="text-xl font-bold text-foreground truncate">{player.name}</h3>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {player.character_class && (
+                            <span className="bg-primary/10 px-2 py-0.5 rounded">{player.character_class}</span>
+                          )}
+                          <span>•</span>
+                          <span>Nvl {player.level || 1}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickHeal(player.id, 5);
+                          }}
+                          className="p-1.5 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors"
+                          title="Curar 5 HP"
+                        >
+                          +5
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickDamage(player.id, 5);
+                          }}
+                          className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                          title="Causar 5 de dano"
+                        >
+                          -5
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEdit(player);
                           }}
-                          className="p-2 text-muted-foreground hover:text-accent hover:bg-accent/20 rounded-lg transition-colors"
+                          className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          title="Editar"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(player.id);
+                      </div>
+                    </div>
+                    
+                    {/* Barra de HP Visual */}
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-3 h-3 text-destructive" />
+                          <span className="text-muted-foreground">Vitalidade</span>
+                        </div>
+                        <span className="font-medium">
+                          {player.hp_current || 0}/{player.hp_max || 0}
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({Math.round(((player.hp_current || 0) / (player.hp_max || 1)) * 100)}%)
+                          </span>
+                        </span>
+                      </div>
+                      
+                      {/* Barra dupla - Vermelho atrás, Verde na frente */}
+                      <div className="relative h-2 w-full bg-red-500/20 rounded-full overflow-hidden">
+                        {/* Fundo vermelho (HP máximo) */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-500/30 to-red-400/20"></div>
+                        
+                        {/* Verde (HP atual) */}
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500 rounded-full"
+                          style={{ 
+                            width: `${Math.max(3, ((player.hp_current || 0) / (player.hp_max || 1)) * 100)}%` 
                           }}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/20 rounded-lg transition-colors"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          {/* Efeito de brilho */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                        </div>
                       </div>
                     </div>
                     
-                    {/* Informações básicas */}
-                    <div className="space-y-2 mb-4">
-                      {player.character_class && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground">Classe:</span>
-                          <span className="text-foreground font-medium">{player.character_class}</span>
+                    {/* Estatísticas Rápidas */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Shield className="w-3 h-3 text-primary" />
+                          <div className="text-xs text-muted-foreground">CA</div>
                         </div>
-                      )}
-                      {player.level && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground">Nível:</span>
-                          <span className="text-foreground font-medium">{player.level}</span>
+                        <div className="text-lg font-bold bg-primary/10 py-1 rounded">{player.ac || 10}</div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Eye className="w-3 h-3 text-secondary" />
+                          <div className="text-xs text-muted-foreground">PER</div>
                         </div>
-                      )}
+                        <div className="text-lg font-bold bg-secondary/10 py-1 rounded">+{player.perception || 0}</div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Brain className="w-3 h-3 text-accent" />
+                          <div className="text-xs text-muted-foreground">VON</div>
+                        </div>
+                        <div className="text-lg font-bold bg-accent/10 py-1 rounded">+{player.will_save || 0}</div>
+                      </div>
                     </div>
                     
-                    <div className="space-y-3 text-sm">
-                      {/* Status Básicos */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">HP:</span>
-                          <span className="text-foreground">{player.hp_current || 0}/{player.hp_max || 0}</span>
+                    {/* Salvaguardas Secundárias */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Fortitude</div>
+                        <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
+                          +{player.fortitude_save || 0}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">CA:</span>
-                          <span className="text-foreground">{player.ac || 10}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Per:</span>
-                          <span className="text-foreground">{player.perception || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Fort:</span>
-                          <span className="text-foreground">{player.fortitude_save || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Ref:</span>
-                          <span className="text-foreground">{player.reflex_save || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Von:</span>
-                          <span className="text-foreground">{player.will_save || 0}</span>
-                        </div>                     
                       </div>
-  
-                      {/* Observações */}
-                      {player.observation && (
-                        <div>
-                          <p className="text-muted-foreground mb-1">Observações:</p>
-                          <p className="text-foreground text-xs bg-accent/10 p-2 rounded whitespace-pre-wrap">
-                            {player.observation}
-                          </p>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Reflexos</div>
+                        <div className="text-sm font-medium bg-blue-500/10 text-blue-500 py-1 rounded">
+                          +{player.reflex_save || 0}
                         </div>
+                      </div>
+                    </div>
+                    
+                    {/* Anotações do Mestre */}
+                    {player.observation && (
+                      <details className="group mt-4">
+                        <summary className="text-sm text-muted-foreground cursor-pointer flex items-center gap-1 hover:text-foreground transition-colors">
+                          <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
+                          Notas do Mestre
+                        </summary>
+                        <div className="mt-2 text-sm bg-muted/30 p-3 rounded border border-border">
+                          {player.observation}
+                        </div>
+                      </details>
+                    )}
+                    
+                    {/* Tags de Identificação */}
+                    <div className="mt-4 flex flex-wrap gap-1">
+                      {player.hp_max && player.hp_max > 50 && (
+                        <span className="text-xs px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full">Tanque</span>
+                      )}
+                      {player.perception && player.perception > 5 && (
+                        <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-full">Percepção</span>
+                      )}
+                      {player.will_save && player.will_save > 5 && (
+                        <span className="text-xs px-2 py-0.5 bg-purple-500/10 text-purple-500 rounded-full">Vontade Forte</span>
                       )}
                     </div>
                   </div>
+                  
+                  {/* Footer com Ações */}
+                  <div className="border-t border-border bg-card/50 px-4 py-3 mt-auto">
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Excluir ${player.name}?`)) {
+                          handleDelete(player.id);
+                        }
+                      }}
+                      className="text-xs px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Excluir
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
+        )}
+        
+        {/* FAB para Mobile */}
+        <div className="lg:hidden fixed bottom-6 right-6 z-40">
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate-pulse-subtle"
+          >
+            <Plus className="w-6 h-6 text-white" />
+          </button>
         </div>
-   
-        </div>
-  
-      {/* Modal de Adicionar/Editar Player */}
+      </div>
+      
+      {/* Modal de Adicionar/Editar */}
       {dialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-foreground">
-                {editingPlayer ? "Editar Aventureiro" : "Novo Aventureiro"}
-              </h3>
-              <p className="text-muted-foreground text-sm mt-1">
-                Preencha os dados do aventureiro
-              </p>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b border-border bg-gradient-to-r from-card to-card/80">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  {editingPlayer ? <Pencil className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {editingPlayer ? "Editar Aventureiro" : "Novo Aventureiro"}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    {editingPlayer ? "Atualize os dados do aventureiro" : "Preencha os dados do novo aventureiro"}
+                  </p>
+                </div>
+              </div>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-  
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Seção: Identificação */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-primary flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Identificação
+                </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
@@ -520,7 +711,7 @@ const Players = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                       placeholder="Nome do aventureiro"
                     />
                   </div>
@@ -533,12 +724,12 @@ const Players = () => {
                       type="text"
                       value={formData.character_class}
                       onChange={(e) => setFormData({ ...formData, character_class: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                       placeholder="Ex: Guerreiro, Mago, Clérigo"
                     />
                   </div>
                 </div>
-
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="level" className="block text-sm font-medium text-foreground mb-2">
@@ -549,24 +740,31 @@ const Players = () => {
                       type="number"
                       value={formData.level}
                       onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                       min="1"
                     />
                   </div>
                   <div>
                     <label htmlFor="ac" className="block text-sm font-medium text-foreground mb-2">
-                      CA
+                      Classe de Armadura (CA)
                     </label>
                     <input
                       id="ac"
                       type="number"
                       value={formData.ac}
                       onChange={(e) => setFormData({ ...formData, ac: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
-
+              </div>
+              
+              {/* Seção: Vitalidade */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-destructive flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  Vitalidade
+                </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="hp_current" className="block text-sm font-medium text-foreground mb-2">
@@ -577,7 +775,7 @@ const Players = () => {
                       type="number"
                       value={formData.hp_current}
                       onChange={(e) => setFormData({ ...formData, hp_current: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div>
@@ -589,11 +787,18 @@ const Players = () => {
                       type="number"
                       value={formData.hp_max}
                       onChange={(e) => setFormData({ ...formData, hp_max: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
-
+              </div>
+              
+              {/* Seção: Defesas */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-secondary flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Defesas
+                </h4>
                 <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label htmlFor="fortitude_save" className="block text-sm font-medium text-foreground mb-2">
@@ -604,7 +809,7 @@ const Players = () => {
                       type="number"
                       value={formData.fortitude_save}
                       onChange={(e) => setFormData({ ...formData, fortitude_save: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div>
@@ -616,7 +821,7 @@ const Players = () => {
                       type="number"
                       value={formData.reflex_save}
                       onChange={(e) => setFormData({ ...formData, reflex_save: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div>
@@ -628,7 +833,7 @@ const Players = () => {
                       type="number"
                       value={formData.will_save}
                       onChange={(e) => setFormData({ ...formData, will_save: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div>
@@ -640,47 +845,55 @@ const Players = () => {
                       type="number"
                       value={formData.perception}
                       onChange={(e) => setFormData({ ...formData, perception: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
+              </div>
               
+              {/* Seção: Anotações */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-accent flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  Anotações do Mestre
+                </h4>
                 <div>
                   <label htmlFor="observation" className="block text-sm font-medium text-foreground mb-2">
-                    Observações
+                    Observações, fraquezas, segredos...
                   </label>
                   <textarea
                     id="observation"
                     value={formData.observation}
                     onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary h-20 resize-none"
-                    placeholder="Observações sobre o aventureiro..."
+                    className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-32 resize-none"
+                    placeholder="Anotações importantes sobre o aventureiro..."
                   />
                 </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDialogOpen(false);
-                      resetForm();
-                    }}
-                    className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-md transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-primary to-primary/80 hover:shadow-[var(--shadow-glow)] text-primary-foreground rounded-md transition-all"
-                  >
-                    {editingPlayer ? "Atualizar" : "Criar"}
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              
+              {/* Botões */}
+              <div className="flex gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDialogOpen(false);
+                    resetForm();
+                  }}
+                  className="flex-1 px-6 py-3 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground rounded-lg transition-all font-medium"
+                >
+                  {editingPlayer ? "Atualizar Aventureiro" : "Criar Aventureiro"}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      
+        </div>
+      )}
     </Layout>
   );
 };
