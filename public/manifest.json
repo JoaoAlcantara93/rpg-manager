@@ -1,7 +1,7 @@
 {
-    "name": "RPG Manager",
-    "short_name": "RPG Manager",
-    "description": "Gerenciador de campanhas e personagens de RPG",
+    "name": "Maestrum",
+    "short_name": "Maestrum",
+    "description": "Gerenciador de campanhas de RPG para mestres",
     "theme_color": "#1a202c",
     "background_color": "#1a202c",
     "display": "standalone",
