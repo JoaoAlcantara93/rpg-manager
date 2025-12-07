@@ -272,25 +272,7 @@ const Layout = ({
           {children}
         </main>
         
-        {/* Footer sutil */}
-        <footer className="border-t border-border/50 mt-12 py-6">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-accent 
-                              flex items-center justify-center">
-                  <span className="text-xs text-white">🐦</span>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  Maestrum • Para mestres de RPG
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground/70">
-                Que sua sessão seja épica
-              </div>
-            </div>
-          </div>
-        </footer>
+      
       </div>
     </div>
   );
