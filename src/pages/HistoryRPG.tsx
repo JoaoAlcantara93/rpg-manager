@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Search, ArrowLeft, X, Edit, BookOpen, Clock, MapPin, Eye, EyeOff, Users, User, Book, Scroll, Swords ,MoreHorizontal, Dices, BarChart3,
   ChevronRight,
   Calendar,
-  Zap,
+  Zap, ChevronDown, ChevronUp,
   
   // Outros ícones que podem estar no código:
   Users as UsersIcon,
@@ -716,100 +716,147 @@ const HistoryRPG = () => {
   
                 <TabsContent value={activeTab} className="space-y-4">
                   {filteredNotes.map((note) => (
-                    <Card 
-                      key={note.id} 
-                      className={`border-2 ${note.is_archived 
+                  <Card 
+                    key={note.id} 
+                    className={`
+                      group relative overflow-hidden transition-all duration-300
+                      ${note.is_archived 
                         ? 'border-gray-500/30 bg-gray-500/5' 
-                        : 'border-border hover:border-primary/50'} 
-                        bg-card/80 hover:bg-card transition-all duration-300
-                        hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)]`}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <div className={`p-2 rounded-lg ${getNoteTypeColor(note.note_type)} 
-                                          flex-shrink-0 mt-1`}>
-                              {getNoteIcon(note.note_type)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-bold text-lg flex items-center gap-2 truncate">
-                                {note.title}
-                                {note.is_archived && (
-                                  <Badge variant="outline" className="bg-gray-500/20 text-gray-600 
-                                                                    border-gray-500/30 flex-shrink-0">
-                                    📁 Arquivada
-                                  </Badge>
-                                )}
-                              </h3>
-                              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
-                                <Badge variant="outline" className={`${getNoteTypeColor(note.note_type)} 
-                                                                   border-current/20`}>
-                                  {getNoteTypeLabel(note.note_type)}
-                                </Badge>
-                                {getSessionInfo(note) && (
-                                  <span className="truncate">• {getSessionInfo(note)}</span>
-                                )}
-                                <span className="text-xs opacity-75">
-                                  📅 {new Date(note.updated_at).toLocaleDateString('pt-BR')}
-                                </span>
-                              </div>
+                        : 'border-border hover:border-primary/50'
+                      }
+                      border-2 bg-card/80 hover:bg-card
+                      hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)]
+                    `}
+                  >
+                    <CardContent className="p-6 space-y-4">
+                      
+                      {/* SEÇÃO 1: DATA EM DESTAQUE (SIMPLIFICADA) */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-5 h-5 text-primary" />
+                          <div>
+                            <div className="text-lg font-semibold text-primary">
+                              {new Date(note.updated_at).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
                             </div>
                           </div>
-  
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-sm">
-                              <DropdownMenuItem onClick={() => handleEdit(note)} className="cursor-pointer">
-                                <Edit className="w-4 h-4 mr-2 text-primary" />
-                                <span>Editar</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleArchive(note)} className="cursor-pointer">
-                                {note.is_archived ? (
-                                  <Eye className="w-4 h-4 mr-2 text-primary" />
-                                ) : (
-                                  <EyeOff className="w-4 h-4 mr-2 text-primary" />
-                                )}
-                                <span>{note.is_archived ? "Desarquivar" : "Arquivar"}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onClick={() => handleDelete(note.id)}
-                                className="text-destructive focus:text-destructive cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                <span>Excluir</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
-  
-                        <div className="prose prose-sm max-w-none mb-4">
-                          <p className="text-foreground/80 line-clamp-3">
-                            {note.notes}
-                          </p>
+                        
+                        {/* Badge de Tipo */}
+                        <Badge 
+                          variant="outline" 
+                          className={`${getNoteTypeColor(note.note_type)} border-current/20`}
+                        >
+                          {getNoteIcon(note.note_type)}
+                          <span className="ml-1.5">{getNoteTypeLabel(note.note_type)}</span>
+                        </Badge>
+                      </div>
+                  
+                      {/* SEÇÃO 2: TÍTULO E METADADOS SECUNDÁRIOS */}
+                      <div className="space-y-3">
+                        <h3 className="font-bold text-xl text-foreground">
+                          {note.title}
+                        </h3>
+                        
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Informação da Sessão */}
+                          {getSessionInfo(note) && (
+                            <Badge 
+                              variant="outline" 
+                              className="bg-secondary/10 text-secondary-foreground border-secondary/20"
+                            >
+                              🎲 {getSessionInfo(note)}
+                            </Badge>
+                          )}
+                          
+                          {/* Status Arquivado */}
+                          {note.is_archived && (
+                            <Badge 
+                              variant="outline" 
+                              className="bg-gray-500/20 text-gray-600 border-gray-500/30"
+                            >
+                              📁 Arquivada
+                            </Badge>
+                          )}
                         </div>
-  
+                      </div>
+                  
+                      {/* SEPARADOR VISUAL SUAVE */}
+                      <div className="border-t border-border/30 my-2"></div>
+                  
+                      {/* SEÇÃO 3: CONTEÚDO COM SCROLL */}
+                      <div className="space-y-3">
+                        <div 
+                          className="text-foreground/90 whitespace-pre-wrap 
+                                    bg-card/30 rounded-lg p-4 text-sm leading-relaxed 
+                                    border border-border/30 max-h-64 overflow-y-auto
+                                    scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+                        >
+                          {note.notes}
+                        </div>
+                      </div>
+                  
+                      {/* SEÇÃO 4: TAGS E AÇÕES */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-border/20">
+                        
+                        {/* Tags */}
                         {note.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-1.5 flex-1">
                             {note.tags.map(tag => (
                               <Badge 
                                 key={tag} 
                                 variant="secondary"
                                 className="bg-primary/5 text-primary/90 border border-primary/10 
-                                         hover:bg-primary/10 transition-colors"
+                                        hover:bg-primary/10 transition-colors px-2.5 py-1 text-xs"
                               >
-                                {tag}
+                                #{tag}
                               </Badge>
                             ))}
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
+                        
+                        {/* Ações (Menu Dropdown) */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 flex-shrink-0"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-sm">
+                            <DropdownMenuItem onClick={() => handleEdit(note)} className="cursor-pointer">
+                              <Edit className="w-4 h-4 mr-2 text-primary" />
+                              <span>Editar</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleArchive(note)} className="cursor-pointer">
+                              {note.is_archived ? (
+                                <Eye className="w-4 h-4 mr-2 text-primary" />
+                              ) : (
+                                <EyeOff className="w-4 h-4 mr-2 text-primary" />
+                              )}
+                              <span>{note.is_archived ? "Desarquivar" : "Arquivar"}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(note.id)}
+                              className="text-destructive focus:text-destructive cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              <span>Excluir</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                  
+                    </CardContent>
+                  </Card>
                   ))}
   
                   {filteredNotes.length === 0 && (
