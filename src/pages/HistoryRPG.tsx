@@ -716,7 +716,7 @@ const HistoryRPG = () => {
   
                 <TabsContent value={activeTab} className="space-y-4">
                   {filteredNotes.map((note) => (
-                  <Card 
+                <Card 
                     key={note.id} 
                     className={`
                       group relative overflow-hidden transition-all duration-300
