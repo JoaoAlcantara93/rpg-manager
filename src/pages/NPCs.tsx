@@ -17,6 +17,7 @@ import {
   Activity,
   ScrollText,
   Wand2,
+  Footprints, 
   Swords as SwordIcon
 } from "lucide-react";
 import Layout from "@/components/Layout";
@@ -519,7 +520,7 @@ const NPCs = () => {
                                   
                                   <div className="text-center">
                                     <div className="flex items-center justify-center gap-1 mb-1">
-                                      <Brain className="w-3 h-3 text-accent" />
+                                      <Footprints  className="w-3 h-3 text-accent" />
                                       <div className="text-xs text-muted-foreground">VEL</div>
                                     </div>
                                     <div className="text-lg font-bold bg-accent/10 py-1 rounded">+{npc.deslocation || 0}</div>

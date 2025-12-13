@@ -154,6 +154,31 @@ const HistoryRPG = () => {
       setLoading(false);
     }
   };
+
+  // Adicione este estado no componente
+const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+
+// Funções para expandir/recolher
+const toggleNoteExpansion = (noteId: string) => {
+  setExpandedNotes(prev => {
+    const newSet = new Set(prev);
+    if (newSet.has(noteId)) {
+      newSet.delete(noteId);
+    } else {
+      newSet.add(noteId);
+    }
+    return newSet;
+  });
+};
+
+// Função para expandir/recolher todas
+const toggleAllNotes = () => {
+  if (expandedNotes.size === filteredNotes.length) {
+    setExpandedNotes(new Set());
+  } else {
+    setExpandedNotes(new Set(filteredNotes.map(note => note.id)));
+  }
+};
   
   const loadNotes = async () => {
     if (!selectedCampaignId) return;
@@ -713,174 +738,271 @@ const HistoryRPG = () => {
                     </CardContent>
                   </Card>
                 )}
-  
-                <TabsContent value={activeTab} className="space-y-4">
-                  {filteredNotes.map((note) => (
-                <Card 
-                    key={note.id} 
-                    className={`
-                      group relative overflow-hidden transition-all duration-300
-                      ${note.is_archived 
-                        ? 'border-gray-500/30 bg-gray-500/5' 
-                        : 'border-border hover:border-primary/50'
-                      }
-                      border-2 bg-card/80 hover:bg-card
-                      hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)]
-                    `}
+  <TabsContent value={activeTab} className="space-y-4">
+  {/* Botão para expandir/recolher todas */}
+  {filteredNotes.length > 1 && (
+    <div className="flex justify-end mb-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={toggleAllNotes}
+        className="border-border/50 hover:border-primary/50"
+      >
+        {expandedNotes.size === filteredNotes.length ? (
+          <>
+            <ChevronUp className="w-4 h-4 mr-2" />
+            Recolher Todas
+          </>
+        ) : (
+          <>
+            <ChevronDown className="w-4 h-4 mr-2" />
+            Expandir Todas
+          </>
+        )}
+      </Button>
+    </div>
+  )}
+
+  {filteredNotes.map((note) => {
+    const isExpanded = expandedNotes.has(note.id);
+    
+    return (
+      <Card 
+        key={note.id} 
+        className={`
+          group relative overflow-hidden transition-all duration-300
+          ${note.is_archived 
+            ? 'border-gray-500/30 bg-gray-500/5' 
+            : 'border-border hover:border-primary/50'
+          }
+          border-2 bg-card/80 hover:bg-card
+          hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)]
+        `}
+      >
+        <CardContent className="p-4">
+          
+          {/* VISÃO COMPACTA (sempre visível) */}
+          <div className="flex items-start justify-between gap-3">
+            {/* Data e Ícone */}
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="flex-shrink-0 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              
+              <div className="min-w-0">
+                {/* Data */}
+                <div className="text-sm font-medium text-primary mb-1">
+                  {new Date(note.updated_at).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </div>
+                
+                {/* Título (com truncamento) */}
+                <h3 className="font-bold text-lg text-foreground truncate">
+                  {note.title}
+                </h3>
+                
+                {/* Tags e Badges (compactos) */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  {/* Badge do Tipo */}
+                  <Badge 
+                    variant="outline" 
+                    className={`${getNoteTypeColor(note.note_type)} border-current/20 text-xs`}
                   >
-                    <CardContent className="p-6 space-y-4">
-                      
-                      {/* SEÇÃO 1: DATA EM DESTAQUE (SIMPLIFICADA) */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
-                        <div className="flex items-center gap-3">
-                          <Calendar className="w-5 h-5 text-primary" />
-                          <div>
-                            <div className="text-lg font-semibold text-primary">
-                              {new Date(note.updated_at).toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: 'long',
-                                year: 'numeric'
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Badge de Tipo */}
-                        <Badge 
-                          variant="outline" 
-                          className={`${getNoteTypeColor(note.note_type)} border-current/20`}
-                        >
-                          {getNoteIcon(note.note_type)}
-                          <span className="ml-1.5">{getNoteTypeLabel(note.note_type)}</span>
-                        </Badge>
-                      </div>
+                    {getNoteIcon(note.note_type)}
+                    <span className="ml-1">{getNoteTypeLabel(note.note_type)}</span>
+                  </Badge>
                   
-                      {/* SEÇÃO 2: TÍTULO E METADADOS SECUNDÁRIOS */}
-                      <div className="space-y-3">
-                        <h3 className="font-bold text-xl text-foreground">
-                          {note.title}
-                        </h3>
-                        
-                        <div className="flex flex-wrap items-center gap-2">
-                          {/* Informação da Sessão */}
-                          {getSessionInfo(note) && (
-                            <Badge 
-                              variant="outline" 
-                              className="bg-secondary/10 text-secondary-foreground border-secondary/20"
-                            >
-                              🎲 {getSessionInfo(note)}
-                            </Badge>
-                          )}
-                          
-                          {/* Status Arquivado */}
-                          {note.is_archived && (
-                            <Badge 
-                              variant="outline" 
-                              className="bg-gray-500/20 text-gray-600 border-gray-500/30"
-                            >
-                              📁 Arquivada
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                  
-                      {/* SEPARADOR VISUAL SUAVE */}
-                      <div className="border-t border-border/30 my-2"></div>
-                  
-                      {/* SEÇÃO 3: CONTEÚDO COM SCROLL */}
-                      <div className="space-y-3">
-                        <div 
-                          className="text-foreground/90 whitespace-pre-wrap 
-                                    bg-card/30 rounded-lg p-4 text-sm leading-relaxed 
-                                    border border-border/30 max-h-64 overflow-y-auto
-                                    scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
-                        >
-                          {note.notes}
-                        </div>
-                      </div>
-                  
-                      {/* SEÇÃO 4: TAGS E AÇÕES */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-border/20">
-                        
-                        {/* Tags */}
-                        {note.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 flex-1">
-                            {note.tags.map(tag => (
-                              <Badge 
-                                key={tag} 
-                                variant="secondary"
-                                className="bg-primary/5 text-primary/90 border border-primary/10 
-                                        hover:bg-primary/10 transition-colors px-2.5 py-1 text-xs"
-                              >
-                                #{tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Ações (Menu Dropdown) */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-sm">
-                            <DropdownMenuItem onClick={() => handleEdit(note)} className="cursor-pointer">
-                              <Edit className="w-4 h-4 mr-2 text-primary" />
-                              <span>Editar</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleArchive(note)} className="cursor-pointer">
-                              {note.is_archived ? (
-                                <Eye className="w-4 h-4 mr-2 text-primary" />
-                              ) : (
-                                <EyeOff className="w-4 h-4 mr-2 text-primary" />
-                              )}
-                              <span>{note.is_archived ? "Desarquivar" : "Arquivar"}</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleDelete(note.id)}
-                              className="text-destructive focus:text-destructive cursor-pointer"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              <span>Excluir</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                  
-                    </CardContent>
-                  </Card>
-                  ))}
-  
-                  {filteredNotes.length === 0 && (
-                    <Card className="border-2 border-dashed border-border/50 bg-card/50">
-                      <CardContent className="py-12 text-center">
-                        <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-                        <p className="text-muted-foreground mb-2">Nenhuma anotação encontrada</p>
-                        <p className="text-sm text-muted-foreground/70 mb-4">
-                          {searchTerm || selectedTags.length > 0 
-                            ? "Tente outros termos ou limpe os filtros" 
-                            : "Comece registrando suas ideias e sessões"}
-                        </p>
-                        <Button 
-                          onClick={() => setDialogOpen(true)}
-                          variant="outline"
-                          className="border-primary/30 hover:border-primary/50"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Criar Primeira Anotação
-                        </Button>
-                      </CardContent>
-                    </Card>
+                  {/* Sessão Info */}
+                  {getSessionInfo(note) && (
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-secondary/10 text-secondary-foreground border-secondary/20 text-xs"
+                    >
+                      🎲 {getSessionInfo(note)}
+                    </Badge>
                   )}
-                </TabsContent>
+                  
+                  {/* Arquivado */}
+                  {note.is_archived && (
+                    <Badge 
+                      variant="outline" 
+                      className="bg-gray-500/20 text-gray-600 border-gray-500/30 text-xs"
+                    >
+                      📁 Arquivada
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Botão de Expandir/Recolher e Menu */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleNoteExpansion(note.id)}
+                className="h-8 w-8 p-0"
+                aria-label={isExpanded ? "Recolher anotação" : "Expandir anotação"}
+              >
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-sm">
+                  <DropdownMenuItem onClick={() => handleEdit(note)} className="cursor-pointer">
+                    <Edit className="w-4 h-4 mr-2 text-primary" />
+                    <span>Editar</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleArchive(note)} className="cursor-pointer">
+                    {note.is_archived ? (
+                      <Eye className="w-4 h-4 mr-2 text-primary" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 mr-2 text-primary" />
+                    )}
+                    <span>{note.is_archived ? "Desarquivar" : "Arquivar"}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => handleDelete(note.id)}
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    <span>Excluir</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          
+          {/* VISÃO EXPANDIDA (apenas quando expandido) */}
+          {isExpanded && (
+            <div className="mt-4 pt-4 border-t border-border/30 animate-in fade-in duration-200">
+              
+              {/* Conteúdo */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-foreground/80">Conteúdo:</Label>
+                <div 
+                  className="text-foreground/90 whitespace-pre-wrap 
+                            bg-card/30 rounded-lg p-4 text-sm leading-relaxed 
+                            border border-border/30 max-h-96 overflow-y-auto
+                            scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+                >
+                  {note.notes}
+                </div>
+              </div>
+              
+              {/* Tags (expandidas) */}
+              {note.tags.length > 0 && (
+                <div className="mt-4">
+                  <Label className="text-sm font-medium text-foreground/80 mb-2 block">Tags:</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {note.tags.map(tag => (
+                      <Badge 
+                        key={tag} 
+                        variant="secondary"
+                        className="bg-primary/5 text-primary/90 border border-primary/10 
+                                hover:bg-primary/10 transition-colors px-2.5 py-1 text-xs"
+                      >
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Metadados Expandidos */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-border/20">
+                <div>
+                  <Label className="text-sm font-medium text-foreground/80 mb-1 block">
+                    Criada em:
+                  </Label>
+                  <div className="text-sm text-foreground/70">
+                    {new Date(note.created_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium text-foreground/80 mb-1 block">
+                    Última atualização:
+                  </Label>
+                  <div className="text-sm text-foreground/70">
+                    {new Date(note.updated_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Botão para editar rápido */}
+              <div className="mt-4 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(note)}
+                  className="border-primary/30 hover:border-primary/50"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar Anotação
+                </Button>
+              </div>
+            </div>
+          )}
+          
+        </CardContent>
+      </Card>
+    );
+  })}
+
+  {/* Mensagem quando não há notas */}
+  {filteredNotes.length === 0 && (
+    <Card className="border-2 border-dashed border-border/50 bg-card/50">
+      <CardContent className="py-12 text-center">
+        <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+        <p className="text-muted-foreground mb-2">Nenhuma anotação encontrada</p>
+        <p className="text-sm text-muted-foreground/70 mb-4">
+          {searchTerm || selectedTags.length > 0 
+            ? "Tente outros termos ou limpe os filtros" 
+            : "Comece registrando suas ideias e sessões"}
+        </p>
+        <Button 
+          onClick={() => setDialogOpen(true)}
+          variant="outline"
+          className="border-primary/30 hover:border-primary/50"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Criar Primeira Anotação
+        </Button>
+      </CardContent>
+    </Card>
+  )}
+</TabsContent>
               </Tabs>
             </>
           ) : (

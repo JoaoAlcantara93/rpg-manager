@@ -58,11 +58,13 @@ interface NpcCharacter extends BaseCharacter {
   attacks?: string | null;
 }
 
+// Tipo para os status
 interface StatusType {
-  id: string;
+  id: string; // Alterado para string pois no Supabase geralmente são UUIDs
   name: string;
   color: string;
   description: string;
+  created_at?: string;
 }
 
 interface LastRoll {
@@ -115,18 +117,27 @@ const Initiative = () => {
     notes: "",
   });
 
+  // Filtragem dos status
+  const filteredStatusTypes = statusTypes.filter(status =>
+    status.name.toLowerCase().includes(searchStatus.toLowerCase()) ||
+    status.description.toLowerCase().includes(searchStatus.toLowerCase())
+  );
+
+  // Função para consultar status
+  const handleConsultStatus = (status: StatusType) => {
+    console.log('🔍 Consultando status:', status);
+    setSelectedStatus(status);
+  };
+
   // Adicionar debug para verificar a campanha atual
   useEffect(() => {
     const campaignId = localStorage.getItem('current-campaign');
-//    console.log('🔄 Campaign ID no localStorage:', campaignId);
   }, []);
 
   const fetchAvailableCharacters = async (type: 'player' | 'npc') => {
     try {
       setLoadingCharacters(true);
       const campaignId = localStorage.getItem('current-campaign');
-      
-      //📋 Buscando personagens para campanha
       
       if (!campaignId) {
         toast.error("Nenhuma campanha selecionada");
@@ -141,8 +152,6 @@ const Initiative = () => {
           .order('name');
   
         if (error) throw error;
-        
-        //🎯 Jogadores encontrados
         
         const mappedData = (data || []).map(player => ({
           id: player.id,
@@ -164,12 +173,12 @@ const Initiative = () => {
         setAvailableCharacters(data || []);
       }
     } catch (error: any) {
-
       toast.error("Erro ao buscar personagens");
     } finally {
       setLoadingCharacters(false);
     }
   };
+  
   // rolagem dos dados
   const rollDice = (dice: string) => {
     let result = 0;
@@ -234,39 +243,83 @@ const Initiative = () => {
         setLoading(false);
         return;
       }
-
+  
+      // Buscar iniciativas
       const { data: initiatives, error } = await supabase
         .from("initiative_entries")
         .select("*")
         .eq("campaign_id", campaignId)
         .order("initiative_value", { ascending: false })
-        .order("position", { ascending: false });
+        .order("position", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      console.log('📊 Entradas de iniciativa encontradas:', initiatives);
+      // Se não houver iniciativas, retornar array vazio
+      if (!initiatives || initiatives.length === 0) {
+        setCharacters([]);
+        setLoading(false);
+        return;
+      }
 
-      const charactersWithStatuses = await Promise.all(
-        (initiatives || []).map(async (char) => {
-          const { data: statuses } = await supabase
-            .from("initiative_character_status")
-            .select(`
-              id,
-              duration,
-              notes,
-              status_type:character_status_types(name, color, description)
-            `)
-            .eq("initiative_id", char.id);
+      // Buscar TODOS os status de uma vez
+      const initiativeIds = initiatives.map(char => char.id);
+      
+      const { data: allStatuses, error: statusError } = await supabase
+        .from("initiative_character_status")
+        .select(`
+          id,
+          initiative_id,
+          duration,
+          notes,
+          status_type_id,
+          character_status_types (
+            id,
+            name,
+            color,
+            description
+          )
+        `)
+        .in("initiative_id", initiativeIds);
 
-          return {
-            ...char,
-            statuses: statuses || [],
-          };
-        })
-      );
+      if (statusError) {
+        console.error('❌ Erro ao buscar status:', statusError);
+      }
 
-      console.log('👥 Personagens com status:', charactersWithStatuses);
+      // Combinar os dados
+      const charactersWithStatuses = initiatives.map(character => {
+        // Filtrar status deste personagem
+        const characterStatuses = (allStatuses || [])
+          .filter(status => status.initiative_id === character.id)
+          .map(status => {
+            // Ajustar para acessar o objeto correto
+            const statusType = status.character_status_types;
+            
+            return {
+              id: status.id,
+              duration: status.duration,
+              notes: status.notes,
+              status_type: statusType ? {
+                name: statusType.name,
+                color: statusType.color,
+                description: statusType.description
+              } : {
+                name: "Desconhecido",
+                color: "#cccccc",
+                description: "Status não encontrado"
+              }
+            };
+          });
+
+        return {
+          ...character,
+          statuses: characterStatuses,
+        };
+      });
+
       setCharacters(charactersWithStatuses);
+      
     } catch (error: any) {
       console.error("Erro ao carregar lista de iniciativa:", error);
       toast.error("Erro ao carregar lista de iniciativa");
@@ -277,15 +330,132 @@ const Initiative = () => {
 
   const fetchStatusTypes = async () => {
     try {
-      const { data, error } = await supabase
-        .from("character_status_types")
-        .select("*")
-        .order("name");
-
-      if (error) throw error;
-      setStatusTypes(data || []);
+      console.log('🔍 DEBUG: Iniciando fetchStatusTypes');
+      
+      // Teste 1: Verificar conexão básica
+      console.log('🔗 Testando conexão com Supabase...');
+      console.log('📡 URL do Supabase:', supabase.supabaseUrl);
+      
+      // Teste 2: Consulta BEM SIMPLES primeiro
+      console.log('📋 Teste 1: Consulta sem order by');
+      const testQuery = await supabase
+        .from('character_status_types')
+        .select('count', { count: 'exact', head: true });
+      
+      console.log('📊 Contagem total:', testQuery);
+      
+      // Teste 3: Consulta completa
+      console.log('📋 Teste 2: Consulta completa');
+      const { data, error, status, statusText } = await supabase
+        .from('character_status_types')
+        .select('id, name, color, description')
+        .order('name');
+      
+      console.log('📦 RESULTADO COMPLETO:', {
+        status,
+        statusText,
+        error,
+        data: data ? `Array com ${data.length} itens` : 'null/undefined',
+        isArray: Array.isArray(data),
+        firstItem: data?.[0]
+      });
+      
+      if (error) {
+        console.error('❌ Erro detalhado:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // Fallback imediato em caso de erro
+        useFallback();
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        console.log('✅ DADOS RECEBIDOS!');
+        console.log('📝 Primeiros 3 itens:', data.slice(0, 3));
+        setStatusTypes(data);
+      } else {
+        console.log('⚠️ Dados vazios ou null');
+        // Verificar se é problema de permissões
+        checkTablePermissions();
+        useFallback();
+      }
+      
     } catch (error: any) {
-      toast.error("Erro ao carregar tipos de status");
+      console.error('💥 Erro catch:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      useFallback();
+    }
+  };
+  
+  // Função auxiliar para fallback
+  const useFallback = () => {
+    console.log('🔄 Usando fallback de dados');
+    const sampleData = [
+      {
+        id: "fallback-1",
+        name: "Incapacitado",
+        color: "#dc2626",
+        description: "Personagem não pode realizar ações"
+      },
+      {
+        id: "fallback-2",
+        name: "Sangrando",
+        color: "#ef4444",
+        description: "Perde 1d4 pontos de vida por turno"
+      },
+      {
+        id: "fallback-3",
+        name: "Envenenado",
+        color: "#10b981",
+        description: "Sofre dano de veneno a cada rodada"
+      },
+      {
+        id: "fallback-4",
+        name: "Amedrontado",
+        color: "#8b5cf6",
+        description: "Não pode se aproximar da fonte do medo"
+      }
+    ];
+    
+    console.log('🎯 Dados de fallback carregados:', sampleData.length, 'itens');
+    setStatusTypes(sampleData);
+  };
+  
+  // Função para verificar permissões
+  const checkTablePermissions = async () => {
+    try {
+      console.log('🔐 Verificando permissões da tabela...');
+      // Tenta inserir um registro temporário (será revertido)
+      const testInsert = await supabase
+        .from('character_status_types')
+        .insert({
+          name: 'TEST_PERMISSION',
+          color: '#000000',
+          description: 'Teste de permissão - apagar depois'
+        })
+        .select();
+      
+      console.log('📝 Teste de inserção:', testInsert);
+      
+      // Se conseguiu inserir, apaga o teste
+      if (testInsert.data) {
+        const deleteTest = await supabase
+          .from('character_status_types')
+          .delete()
+          .eq('name', 'TEST_PERMISSION');
+        
+        console.log('🗑️ Teste apagado:', deleteTest);
+      }
+      
+    } catch (error) {
+      console.log('🔒 Erro de permissão:', error);
     }
   };
 
@@ -301,7 +471,6 @@ const Initiative = () => {
     setCurrentTurn(1);
     setTotalTurns(1);
     setCombatTime(0);
-    
   };
 
   const nextTurn = () => {
@@ -423,7 +592,6 @@ const Initiative = () => {
         });
       }
   
-      console.log('➕ Adicionando à iniciativa:', entriesToAdd);
       const { error } = await supabase.from("initiative_entries").insert(entriesToAdd);
       if (error) throw error;
   
@@ -528,14 +696,6 @@ const Initiative = () => {
     setSelectedCharacter(null);
   };
 
-  const filteredStatusTypes = statusTypes.filter(status =>
-    status.name.toLowerCase().includes(searchStatus.toLowerCase())
-  );
-
-  const handleConsultStatus = (status: StatusType) => {
-    setSelectedStatus(status);
-  };
-
   const menuItems = [
     {
       title: "NPCs",
@@ -611,67 +771,65 @@ const Initiative = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-  {!combatStarted ? (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button 
-        onClick={startCombat}
-        className="bg-gradient-to-r from-primary to-accent 
-                hover:from-primary/90 hover:to-accent/90
-                border border-primary/30
-                shadow-lg hover:shadow-xl hover:shadow-primary/20"
-      >
-        <Play className="w-5 h-5 mr-2" />
-        Iniciar Combate
-      </Button>
-      
-      <Button 
-        onClick={() => setDialogOpen(true)}
-        className="bg-gradient-to-r from-primary to-accent 
-                hover:from-primary/90 hover:to-accent/90
-                border border-primary/30
-                shadow-lg hover:shadow-xl hover:shadow-primary/20"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Adicionar NPC/Player
-      </Button>               
-    </div>
-  ) : (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button 
-        onClick={resetCombat}
-        variant="outline"
-        className="border-2 border-border hover:border-primary/50"
-      >
-        <RotateCcw className="w-4 h-4 mr-2" />
-        Parar
-      </Button>
-      
-      <Button 
-        onClick={nextTurn}
-        className="bg-gradient-to-r from-primary to-accent 
-                hover:from-primary/90 hover:to-accent/90
-                border border-primary/30
-                shadow-lg hover:shadow-xl hover:shadow-primary/20"
-      >
-        <SkipForward className="w-4 h-4 mr-2" />
-        Próximo Turno
-      </Button>
-      
-      <Button 
-        onClick={() => setDialogOpen(true)}
-        className="bg-gradient-to-r from-primary to-accent 
-                hover:from-primary/90 hover:to-accent/90
-                border border-primary/30
-                shadow-lg hover:shadow-xl hover:shadow-primary/20"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add 
-      </Button>
-    </div>
-  )}
-</div>
-
-          
+              {!combatStarted ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button 
+                    onClick={startCombat}
+                    className="bg-gradient-to-r from-primary to-accent 
+                            hover:from-primary/90 hover:to-accent/90
+                            border border-primary/30
+                            shadow-lg hover:shadow-xl hover:shadow-primary/20"
+                  >
+                    <Play className="w-5 h-5 mr-2" />
+                    Iniciar Combate
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setDialogOpen(true)}
+                    className="bg-gradient-to-r from-primary to-accent 
+                            hover:from-primary/90 hover:to-accent/90
+                            border border-primary/30
+                            shadow-lg hover:shadow-xl hover:shadow-primary/20"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar NPC/Player
+                  </Button>               
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button 
+                    onClick={resetCombat}
+                    variant="outline"
+                    className="border-2 border-border hover:border-primary/50"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Parar
+                  </Button>
+                  
+                  <Button 
+                    onClick={nextTurn}
+                    className="bg-gradient-to-r from-primary to-accent 
+                            hover:from-primary/90 hover:to-accent/90
+                            border border-primary/30
+                            shadow-lg hover:shadow-xl hover:shadow-primary/20"
+                  >
+                    <SkipForward className="w-4 h-4 mr-2" />
+                    Próximo Turno
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setDialogOpen(true)}
+                    className="bg-gradient-to-r from-primary to-accent 
+                            hover:from-primary/90 hover:to-accent/90
+                            border border-primary/30
+                            shadow-lg hover:shadow-xl hover:shadow-primary/20"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add 
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
          
   
@@ -877,7 +1035,16 @@ const Initiative = () => {
                               borderColor: status.status_type.color,
                               color: status.status_type.color
                             }}
-                            onClick={() => handleConsultStatus(status.status_type)}
+                            onClick={() => {
+                              // Criar um objeto StatusType a partir dos dados do status
+                              const statusType: StatusType = {
+                                id: status.status_type.name, // Usar name como ID temporário
+                                name: status.status_type.name,
+                                color: status.status_type.color,
+                                description: status.status_type.description
+                              };
+                              handleConsultStatus(statusType);
+                            }}
                           >
                             <div 
                               className="w-2 h-2 rounded-full"
@@ -1029,10 +1196,12 @@ const Initiative = () => {
                 )}
               </CardTitle>
               <CardDescription>
-                Procure e consulte a descrição dos status
+                Consulte a descrição dos status
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
+              
+              
               {!selectedStatus ? (
                 <div className="space-y-4">
                   <div className="relative">
@@ -1069,7 +1238,9 @@ const Initiative = () => {
                     
                     {filteredStatusTypes.length === 0 && (
                       <div className="text-center py-4">
-                        <p className="text-muted-foreground">Nenhum status encontrado</p>
+                        <p className="text-muted-foreground">
+                          {searchStatus ? 'Nenhum status encontrado' : 'Nenhum status cadastrado'}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1109,7 +1280,6 @@ const Initiative = () => {
                 if (!open) resetForm();
               }}>
                 <DialogTrigger asChild>
-              
                 </DialogTrigger>
                 <DialogContent className="bg-card rounded-lg border-2 border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
