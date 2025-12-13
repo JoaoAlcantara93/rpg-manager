@@ -38,6 +38,8 @@ interface Npc {
   will_save?: number | null;
   perception?: number | null;
   attacks?: string | null;
+  skills?: string | null; 
+  deslocation?: number | null; 
   image_url?: string | null;
   observation?: string | null;
   created_at: string;
@@ -62,7 +64,9 @@ const NPCs = () => {
     reflex_save: "0",
     will_save: "0",
     perception: "0",
+    deslocation: "1",
     attacks: "",
+    skills:"",
     image_url: "",
     observation: ""
   });
@@ -121,6 +125,7 @@ const NPCs = () => {
         name: formData.name,
         attributes: formData.attributes || "",
         spells: formData.spells || "",
+        skills: formData.skills || "", 
         current_hp: parseInt(formData.current_hp) || 0,
         max_hp: parseInt(formData.max_hp) || 0,
         armor_class: parseInt(formData.armor_class) || 10,
@@ -128,6 +133,7 @@ const NPCs = () => {
         reflex_save: parseInt(formData.reflex_save) || 0,
         will_save: parseInt(formData.will_save) || 0,
         perception: parseInt(formData.perception) || 0,
+        deslocation: parseInt(formData.deslocation) || 1,
         attacks: formData.attacks,
         image_url: formData.image_url,
         observation: formData.observation
@@ -177,6 +183,7 @@ const NPCs = () => {
                  npc.attributes ? JSON.stringify(npc.attributes, null, 2) : "",
       spells: typeof npc.spells === 'string' ? npc.spells : 
               npc.spells ? JSON.stringify(npc.spells, null, 2) : "",
+      skills: npc.skills || "", // MUDANÇA AQUI - remover o JSON.stringify desnecessário
       current_hp: (npc.current_hp || 0).toString(),
       max_hp: (npc.max_hp || 0).toString(),
       armor_class: (npc.armor_class || 10).toString(),
@@ -184,6 +191,7 @@ const NPCs = () => {
       reflex_save: (npc.reflex_save || 0).toString(),
       will_save: (npc.will_save || 0).toString(),
       perception: (npc.perception || 0).toString(),
+      deslocation: (npc.deslocation || 1).toString(), // ADICIONE ESTA LINHA
       attacks: npc.attacks || "",
       image_url: npc.image_url || "",
       observation: npc.observation || ""
@@ -273,6 +281,7 @@ const NPCs = () => {
       name: "", 
       attributes: "", 
       spells: "",
+      skills: "", 
       current_hp: "",
       max_hp: "",
       armor_class: "10",
@@ -280,6 +289,7 @@ const NPCs = () => {
       reflex_save: "0",
       will_save: "0",
       perception: "0",
+      deslocation: "1", 
       attacks: "",
       image_url: "",
       observation: ""
@@ -510,14 +520,14 @@ const NPCs = () => {
                                   <div className="text-center">
                                     <div className="flex items-center justify-center gap-1 mb-1">
                                       <Brain className="w-3 h-3 text-accent" />
-                                      <div className="text-xs text-muted-foreground">VON</div>
+                                      <div className="text-xs text-muted-foreground">VEL</div>
                                     </div>
-                                    <div className="text-lg font-bold bg-accent/10 py-1 rounded">+{npc.will_save || 0}</div>
+                                    <div className="text-lg font-bold bg-accent/10 py-1 rounded">+{npc.deslocation || 0}</div>
                                   </div>
                                 </div>
                                 
                                 {/* Salvaguardas Secundárias */}
-                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="grid grid-cols-3 gap-3 mb-4">
                                   <div className="text-center">
                                     <div className="text-xs text-muted-foreground mb-1">Fortitude</div>
                                     <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
@@ -530,7 +540,14 @@ const NPCs = () => {
                                       +{npc.reflex_save || 0}
                                     </div>
                                   </div>
+                                  <div className="text-center">
+                                    <div className="text-xs text-muted-foreground mb-1">Vontade</div>
+                                    <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
+                                      +{npc.will_save || 0}
+                                    </div>
+                                  </div>
                                 </div>
+                                
                                 
                                 {/* Informações Específicas de NPC */}
                                 {npc.attacks && (
@@ -554,6 +571,19 @@ const NPCs = () => {
                                     </div>
                                     <p className="text-sm bg-blue-500/10 p-2 rounded border border-blue-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
                                       {typeof npc.attributes === 'string' ? npc.attributes : JSON.stringify(npc.attributes, null, 2)}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Perícias */}
+                                {npc.skills && (
+                                  <div className="mb-3">
+                                    <div className="flex items-center gap-1 mb-1">
+                                      <ScrollText className="w-3 h-3 text-blue-500" />
+                                      <span className="text-xs text-muted-foreground">Perícias</span>
+                                    </div>
+                                    <p className="text-sm bg-blue-500/10 p-2 rounded border border-blue-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
+                                      {typeof npc.skills === 'string' ? npc.skills : JSON.stringify(npc.skills, null, 2)}
                                     </p>
                                   </div>
                                 )}
@@ -690,7 +720,7 @@ const NPCs = () => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="armor_class" className="block text-sm font-medium text-foreground mb-2">
                       Classe de Armadura (CA)
@@ -712,6 +742,18 @@ const NPCs = () => {
                       type="number"
                       value={formData.perception}
                       onChange={(e) => setFormData({ ...formData, perception: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="perception" className="block text-sm font-medium text-foreground mb-2">
+                      Velocidade/Movimentação
+                    </label>
+                    <input
+                      id="deslocation"
+                      type="number"
+                      value={formData.deslocation}
+                      onChange={(e) => setFormData({ ...formData, deslocation: e.target.value })}
                       className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
@@ -761,6 +803,18 @@ const NPCs = () => {
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
+                    <label htmlFor="will_save" className="block text-sm font-medium text-foreground mb-2">
+                      Vontade
+                    </label>
+                    <input
+                      id="will_save"
+                      type="number"
+                      value={formData.will_save}
+                      onChange={(e) => setFormData({ ...formData, will_save: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
+                  <div>
                     <label htmlFor="fortitude_save" className="block text-sm font-medium text-foreground mb-2">
                       Fortitude
                     </label>
@@ -784,18 +838,7 @@ const NPCs = () => {
                       className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
-                  <div>
-                    <label htmlFor="will_save" className="block text-sm font-medium text-foreground mb-2">
-                      Vontade
-                    </label>
-                    <input
-                      id="will_save"
-                      type="number"
-                      value={formData.will_save}
-                      onChange={(e) => setFormData({ ...formData, will_save: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
-                    />
-                  </div>
+                  
                 </div>
               </div>
               
@@ -829,11 +872,27 @@ const NPCs = () => {
                     onChange={(e) => setFormData({ ...formData, attributes: e.target.value })}
                     className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none"
                     placeholder="Força: 10
-  Destreza: 12
-  Constituição: 14
-  Inteligência: 8
-  Sabedoria: 10
-  Carisma: 16"
+                    Destreza: 12
+                    Constituição: 14
+                    Inteligência: 8
+                    Sabedoria: 10
+                    Carisma: 16"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="attributes" className="block text-sm font-medium text-foreground mb-2">
+                    Perícias
+                  </label>
+                  <textarea
+                    id="skills"
+                    value={formData.skills}
+                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none"
+                    placeholder="
+                    Medicina: 10
+                    Acrobacia: 12
+                    Ladinagem: 14"
                   />
                 </div>
                 
