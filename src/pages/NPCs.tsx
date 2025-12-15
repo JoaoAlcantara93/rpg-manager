@@ -1,4 +1,4 @@
-// src/pages/NPCs.tsx - Versão Padronizada
+// src/pages/NPCs.tsx - Versão com Upload de Imagem
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -18,6 +18,7 @@ import {
   ScrollText,
   Wand2,
   Footprints, 
+  X,
   Swords as SwordIcon
 } from "lucide-react";
 import Layout from "@/components/Layout";
@@ -54,6 +55,12 @@ const NPCs = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNpc, setEditingNpc] = useState<Npc | null>(null);
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
+  
+  // Estado para o upload de imagem
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     attributes: "",
@@ -67,7 +74,7 @@ const NPCs = () => {
     perception: "0",
     deslocation: "1",
     attacks: "",
-    skills:"",
+    skills: "",
     image_url: "",
     observation: ""
   });
@@ -105,6 +112,64 @@ const NPCs = () => {
     }
   };
 
+  // Função para fazer upload da imagem para o Supabase Storage
+  const uploadImageToStorage = async (file: File, npcId?: string) => {
+    try {
+      setUploadingImage(true);
+      
+      // Cria um nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${npcId || 'npc'}_${Date.now()}.${fileExt}`;
+      const filePath = `npcs/${fileName}`;
+
+      // Faz o upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('npcs-images') // Bucket para imagens de NPCs
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) throw error;
+
+      // Obtém a URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('npcs-images')
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Erro no upload da imagem:', error);
+      toast.error('Erro ao fazer upload da imagem');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Função para deletar imagem do Storage
+  const deleteImageFromStorage = async (imageUrl: string) => {
+    try {
+      // Extrai o path da URL
+      const urlParts = imageUrl.split('/storage/v1/object/public/');
+      if (urlParts.length < 2) return;
+      
+      const pathParts = urlParts[1].split('/');
+      const bucketName = pathParts[0];
+      const fileName = pathParts.slice(1).join('/');
+      
+      const { error } = await supabase.storage
+        .from(bucketName)
+        .remove([fileName]);
+        
+      if (error) {
+        console.log('Erro ao deletar imagem:', error);
+      }
+    } catch (error) {
+      console.log('Erro ao processar URL da imagem:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -120,13 +185,31 @@ const NPCs = () => {
         throw new Error("Usuário não autenticado");
       }
 
+      let imageUrl = formData.image_url;
+
+      // Upload da imagem se foi selecionada uma nova
+      if (selectedImage) {
+        const uploadedUrl = await uploadImageToStorage(selectedImage, editingNpc?.id);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
+      // Se está editando e houve mudança de imagem (nova ou removida)
+      if (editingNpc && editingNpc.image_url && imageUrl !== editingNpc.image_url) {
+        // Deleta a imagem antiga do storage se era uma imagem do Supabase
+        if (editingNpc.image_url.includes('storage.supabase.com')) {
+          await deleteImageFromStorage(editingNpc.image_url);
+        }
+      }
+
       const npcData = {
         campaign_id: currentCampaignId,
         user_id: user.id,
         name: formData.name,
         attributes: formData.attributes || "",
         spells: formData.spells || "",
-        skills: formData.skills || "", 
+        skills: formData.skills || "",
         current_hp: parseInt(formData.current_hp) || 0,
         max_hp: parseInt(formData.max_hp) || 0,
         armor_class: parseInt(formData.armor_class) || 10,
@@ -136,7 +219,7 @@ const NPCs = () => {
         perception: parseInt(formData.perception) || 0,
         deslocation: parseInt(formData.deslocation) || 1,
         attacks: formData.attacks,
-        image_url: formData.image_url,
+        image_url: imageUrl,
         observation: formData.observation
       };
 
@@ -184,7 +267,7 @@ const NPCs = () => {
                  npc.attributes ? JSON.stringify(npc.attributes, null, 2) : "",
       spells: typeof npc.spells === 'string' ? npc.spells : 
               npc.spells ? JSON.stringify(npc.spells, null, 2) : "",
-      skills: npc.skills || "", // MUDANÇA AQUI - remover o JSON.stringify desnecessário
+      skills: npc.skills || "",
       current_hp: (npc.current_hp || 0).toString(),
       max_hp: (npc.max_hp || 0).toString(),
       armor_class: (npc.armor_class || 10).toString(),
@@ -192,11 +275,20 @@ const NPCs = () => {
       reflex_save: (npc.reflex_save || 0).toString(),
       will_save: (npc.will_save || 0).toString(),
       perception: (npc.perception || 0).toString(),
-      deslocation: (npc.deslocation || 1).toString(), // ADICIONE ESTA LINHA
+      deslocation: (npc.deslocation || 1).toString(),
       attacks: npc.attacks || "",
       image_url: npc.image_url || "",
       observation: npc.observation || ""
     });
+    
+    // Se já tiver uma imagem, carrega o preview
+    if (npc.image_url) {
+      setImagePreview(npc.image_url);
+    } else {
+      setImagePreview(null);
+    }
+    
+    setSelectedImage(null);
     setDialogOpen(true);
   };
 
@@ -204,6 +296,14 @@ const NPCs = () => {
     if (!confirm("Tem certeza que deseja excluir este NPC?")) return;
 
     try {
+      // Encontra o NPC para pegar a URL da imagem
+      const npcToDelete = npcs.find(npc => npc.id === id);
+      
+      // Deleta a imagem do Storage se existir
+      if (npcToDelete?.image_url && npcToDelete.image_url.includes('storage.supabase.com')) {
+        await deleteImageFromStorage(npcToDelete.image_url);
+      }
+
       const { error } = await supabase
         .from('npcs')
         .delete()
@@ -216,6 +316,46 @@ const NPCs = () => {
     } catch (error: any) {
       toast.error(`Erro ao excluir: ${error.message}`);
     }
+  };
+
+  // Função para lidar com a seleção de arquivo de imagem
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validação do tipo de arquivo
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Por favor, selecione uma imagem (JPEG, PNG, GIF ou WebP)');
+      return;
+    }
+
+    // Validação do tamanho (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    
+    // Cria preview local
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Limpa o campo de URL se estiver preenchido
+    if (formData.image_url) {
+      setFormData({ ...formData, image_url: "" });
+    }
+  };
+
+  // Função para remover a imagem selecionada
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image_url: "" });
   };
 
   const handleQuickHeal = async (npcId: string, amount: number) => {
@@ -295,6 +435,8 @@ const NPCs = () => {
       image_url: "",
       observation: ""
     });
+    setSelectedImage(null);
+    setImagePreview(null);
     setEditingNpc(null);
   };
 
@@ -424,7 +566,6 @@ const NPCs = () => {
             )}
             
             {/* NPCs existentes */}
-          
             {npcs.map((npc) => {
               const healthPercentage = getHealthPercentage(npc);
               
@@ -435,41 +576,41 @@ const NPCs = () => {
                 >
                   {/* Banner com imagem grande no topo */}
                   <div className="relative h-40 overflow-hidden">
-                  {/* Fundo borrado */}
-                  <div 
-                    className="absolute inset-0 bg-center bg-cover blur-lg scale-110"
-                    style={{ backgroundImage: `url(${npc.image_url})` }}
-                  />
+                    {npc.image_url ? (
+                      <>
+                        {/* Fundo borrado */}
+                        <div 
+                          className="absolute inset-0 bg-center bg-cover blur-lg scale-110"
+                          style={{ backgroundImage: `url(${npc.image_url})` }}
+                        />
+                        {/* Overlay escuro */}
+                        <div className="absolute inset-0 bg-black/40" />
+                        {/* Imagem principal */}
+                        <img
+                          src={npc.image_url}
+                          alt={npc.name}
+                          className="relative z-10 mx-auto h-full object-contain"
+                          onError={(e) => {
+                            // Fallback se a imagem não carregar
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                        <Users className="w-16 h-16 text-primary/40" />
+                      </div>
+                    )}
+                  </div>
 
-                  {/* Overlay escuro */}
-                  <div className="absolute inset-0 bg-black/40" />
-
-                  {/* Imagem principal */}
-                  <img
-                    src={npc.image_url}
-                    alt={npc.name}
-                    className="relative z-10 mx-auto h-full object-contain"
-                  />
-                </div>
-
-                  
                   {/* Conteúdo abaixo da imagem */}
-
-                  {/* Header */}
                   <div className="px-4 py-3 border-b border-border bg-card/70 backdrop-blur-sm">
                     <h3 className="text-base font-semibold leading-tight truncate">
                       {npc.name}
                     </h3>
-
-                    {npc.race && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {npc.race} {npc.class && `• ${npc.class}`}
-                      </p>
-                    )}
                   </div>
 
                   <div className="p-6 flex-1">
-                    
                     {/* Barra de HP Visual */}
                     <div className="mb-4">
                       <div className="flex justify-between text-sm mb-1">
@@ -498,171 +639,169 @@ const NPCs = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Estatísticas Rápidas */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Shield className="w-3 h-3 text-primary" />
+                          <div className="text-xs text-muted-foreground">CA</div>
+                        </div>
+                        <div className="text-lg font-bold bg-primary/10 py-1 rounded">{npc.armor_class || 10}</div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Eye className="w-3 h-3 text-secondary" />
+                          <div className="text-xs text-muted-foreground">PER</div>
+                        </div>
+                        <div className="text-lg font-bold bg-secondary/10 py-1 rounded">+{npc.perception || 0}</div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Footprints className="w-3 h-3 text-accent" />
+                          <div className="text-xs text-muted-foreground">VEL</div>
+                        </div>
+                        <div className="text-lg font-bold bg-accent/10 py-1 rounded">+{npc.deslocation || 0}</div>
+                      </div>
+                    </div>
                     
+                    {/* Salvaguardas Secundárias */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Fortitude</div>
+                        <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
+                          +{npc.fortitude_save || 0}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Reflexos</div>
+                        <div className="text-sm font-medium bg-blue-500/10 text-blue-500 py-1 rounded">
+                          +{npc.reflex_save || 0}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Vontade</div>
+                        <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
+                          +{npc.will_save || 0}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Informações Específicas de NPC */}
+                    {npc.attacks && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-1 mb-1">
+                          <SwordIcon className="w-3 h-3 text-destructive" />
+                          <span className="text-xs text-muted-foreground">Ataques</span>
+                        </div>
+                        <p className="text-sm bg-destructive/10 p-2 rounded border border-destructive/20">
+                          {npc.attacks}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Atributos */}
+                    {npc.attributes && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-1 mb-1">
+                          <ScrollText className="w-3 h-3 text-blue-500" />
+                          <span className="text-xs text-muted-foreground">Atributos</span>
+                        </div>
+                        <p className="text-sm bg-blue-500/10 p-2 rounded border border-blue-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
+                          {typeof npc.attributes === 'string' ? npc.attributes : JSON.stringify(npc.attributes, null, 2)}
+                        </p>
+                      </div>
+                    )}
 
-                                {/* Estatísticas Rápidas */}
-                                <div className="grid grid-cols-3 gap-3 mb-4">
-                                  <div className="text-center">
-                                    <div className="flex items-center justify-center gap-1 mb-1">
-                                      <Shield className="w-3 h-3 text-primary" />
-                                      <div className="text-xs text-muted-foreground">CA</div>
-                                    </div>
-                                    <div className="text-lg font-bold bg-primary/10 py-1 rounded">{npc.armor_class || 10}</div>
-                                  </div>
-                                  
-                                  <div className="text-center">
-                                    <div className="flex items-center justify-center gap-1 mb-1">
-                                      <Eye className="w-3 h-3 text-secondary" />
-                                      <div className="text-xs text-muted-foreground">PER</div>
-                                    </div>
-                                    <div className="text-lg font-bold bg-secondary/10 py-1 rounded">+{npc.perception || 0}</div>
-                                  </div>
-                                  
-                                  <div className="text-center">
-                                    <div className="flex items-center justify-center gap-1 mb-1">
-                                      <Footprints  className="w-3 h-3 text-accent" />
-                                      <div className="text-xs text-muted-foreground">VEL</div>
-                                    </div>
-                                    <div className="text-lg font-bold bg-accent/10 py-1 rounded">+{npc.deslocation || 0}</div>
-                                  </div>
-                                </div>
-                                
-                                {/* Salvaguardas Secundárias */}
-                                <div className="grid grid-cols-3 gap-3 mb-4">
-                                  <div className="text-center">
-                                    <div className="text-xs text-muted-foreground mb-1">Fortitude</div>
-                                    <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
-                                      +{npc.fortitude_save || 0}
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xs text-muted-foreground mb-1">Reflexos</div>
-                                    <div className="text-sm font-medium bg-blue-500/10 text-blue-500 py-1 rounded">
-                                      +{npc.reflex_save || 0}
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xs text-muted-foreground mb-1">Vontade</div>
-                                    <div className="text-sm font-medium bg-green-500/10 text-green-500 py-1 rounded">
-                                      +{npc.will_save || 0}
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                
-                                {/* Informações Específicas de NPC */}
-                                {npc.attacks && (
-                                  <div className="mb-3">
-                                    <div className="flex items-center gap-1 mb-1">
-                                      <SwordIcon className="w-3 h-3 text-destructive" />
-                                      <span className="text-xs text-muted-foreground">Ataques</span>
-                                    </div>
-                                    <p className="text-sm bg-destructive/10 p-2 rounded border border-destructive/20">
-                                      {npc.attacks}
-                                    </p>
-                                  </div>
-                                )}
-                                
-                                {/* Atributos */}
-                                {npc.attributes && (
-                                  <div className="mb-3">
-                                    <div className="flex items-center gap-1 mb-1">
-                                      <ScrollText className="w-3 h-3 text-blue-500" />
-                                      <span className="text-xs text-muted-foreground">Atributos</span>
-                                    </div>
-                                    <p className="text-sm bg-blue-500/10 p-2 rounded border border-blue-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
-                                      {typeof npc.attributes === 'string' ? npc.attributes : JSON.stringify(npc.attributes, null, 2)}
-                                    </p>
-                                  </div>
-                                )}
-
-                                {/* Perícias */}
-                                {npc.skills && (
-                                  <div className="mb-3">
-                                    <div className="flex items-center gap-1 mb-1">
-                                      <ScrollText className="w-3 h-3 text-blue-500" />
-                                      <span className="text-xs text-muted-foreground">Perícias</span>
-                                    </div>
-                                    <p className="text-sm bg-blue-500/10 p-2 rounded border border-blue-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
-                                      {typeof npc.skills === 'string' ? npc.skills : JSON.stringify(npc.skills, null, 2)}
-                                    </p>
-                                  </div>
-                                )}
-                                
-                                {/* Magias */}
-                                {npc.spells && (
-                                  <div className="mb-3">
-                                    <div className="flex items-center gap-1 mb-1">
-                                      <Wand2 className="w-3 h-3 text-purple-500" />
-                                      <span className="text-xs text-muted-foreground">Magias</span>
-                                    </div>
-                                    <p className="text-sm bg-purple-500/10 p-2 rounded border border-purple-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
-                                      {typeof npc.spells === 'string' ? npc.spells : JSON.stringify(npc.spells, null, 2)}
-                                    </p>
-                                  </div>
-                                )}
-                                
-                                {/* Anotações do Mestre */}
-                                {npc.observation && (
-                                  <details className="group mt-3">
-                                    <summary className="text-sm text-muted-foreground cursor-pointer flex items-center gap-1 hover:text-foreground transition-colors">
-                                      <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
-                                      Notas do Mestre
-                                    </summary>
-                                    <div className="mt-2 text-sm bg-muted/30 p-3 rounded border border-border">
-                                      {npc.observation}
-                                    </div>
-                                  </details>
-                                )}
-                                
-                                {/* Tags de Identificação */}
-                                <div className="mt-4 flex flex-wrap gap-1">
-                                  {npc.max_hp && npc.max_hp > 40 && (
-                                    <span className="text-xs px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full">Resistente</span>
-                                  )}
-                                  {npc.perception && npc.perception > 4 && (
-                                    <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-full">Vigilante</span>
-                                  )}
-                                  {npc.will_save && npc.will_save > 4 && (
-                                    <span className="text-xs px-2 py-0.5 bg-purple-500/10 text-purple-500 rounded-full">Focado</span>
-                                  )}
-                                  {npc.attacks && (
-                                    <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded-full">Agressivo</span>
-                                  )}
-                                  {npc.spells && (
-                                    <span className="text-xs px-2 py-0.5 bg-indigo-500/10 text-indigo-500 rounded-full">Mágico</span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {/* Footer com Ações */}
-                              <div className="border-t border-border bg-card/50 px-4 py-3 mt-auto flex justify-between">
-                              <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEdit(npc);
-                                  }}
-                                  className="text-xs px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-1"
-                                >
-                                  <Pencil className="w-3 h-3" />
-                                  Editar
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (confirm(`Excluir ${npc.name}?`)) {
-                                      handleDelete(npc.id);
-                                    }
-                                  }}
-                                  className="text-xs px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors flex items-center gap-1"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                  Excluir
-                                </button>
-                              </div>
-                            </div>
-                          );
-                })}
+                    {/* Perícias */}
+                    {npc.skills && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-1 mb-1">
+                          <ScrollText className="w-3 h-3 text-blue-500" />
+                          <span className="text-xs text-muted-foreground">Perícias</span>
+                        </div>
+                        <p className="text-sm bg-blue-500/10 p-2 rounded border border-blue-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
+                          {typeof npc.skills === 'string' ? npc.skills : JSON.stringify(npc.skills, null, 2)}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Magias */}
+                    {npc.spells && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Wand2 className="w-3 h-3 text-purple-500" />
+                          <span className="text-xs text-muted-foreground">Magias</span>
+                        </div>
+                        <p className="text-sm bg-purple-500/10 p-2 rounded border border-purple-500/20 whitespace-pre-wrap max-h-24 overflow-y-auto">
+                          {typeof npc.spells === 'string' ? npc.spells : JSON.stringify(npc.spells, null, 2)}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Anotações do Mestre */}
+                    {npc.observation && (
+                      <details className="group mt-3">
+                        <summary className="text-sm text-muted-foreground cursor-pointer flex items-center gap-1 hover:text-foreground transition-colors">
+                          <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
+                          Notas do Mestre
+                        </summary>
+                        <div className="mt-2 text-sm bg-muted/30 p-3 rounded border border-border">
+                          {npc.observation}
+                        </div>
+                      </details>
+                    )}
+                    
+                    {/* Tags de Identificação */}
+                    <div className="mt-4 flex flex-wrap gap-1">
+                      {npc.max_hp && npc.max_hp > 40 && (
+                        <span className="text-xs px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full">Resistente</span>
+                      )}
+                      {npc.perception && npc.perception > 4 && (
+                        <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-full">Vigilante</span>
+                      )}
+                      {npc.will_save && npc.will_save > 4 && (
+                        <span className="text-xs px-2 py-0.5 bg-purple-500/10 text-purple-500 rounded-full">Focado</span>
+                      )}
+                      {npc.attacks && (
+                        <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded-full">Agressivo</span>
+                      )}
+                      {npc.spells && (
+                        <span className="text-xs px-2 py-0.5 bg-indigo-500/10 text-indigo-500 rounded-full">Mágico</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Footer com Ações */}
+                  <div className="border-t border-border bg-card/50 px-4 py-3 mt-auto flex justify-between">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(npc);
+                      }}
+                      className="text-xs px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      Editar
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Excluir ${npc.name}?`)) {
+                          handleDelete(npc.id);
+                        }
+                      }}
+                      className="text-xs px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
         
@@ -747,7 +886,7 @@ const NPCs = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="perception" className="block text-sm font-medium text-foreground mb-2">
+                    <label htmlFor="deslocation" className="block text-sm font-medium text-foreground mb-2">
                       Velocidade/Movimentação
                     </label>
                     <input
@@ -760,7 +899,97 @@ const NPCs = () => {
                   </div>
                 </div>
               </div>
-             
+
+              {/* Seção: Imagem do NPC */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-accent flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Imagem do NPC
+                </h4>
+                
+                {/* Preview da imagem */}
+                {(imagePreview || formData.image_url) && (
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={imagePreview || formData.image_url || ""}
+                      alt="Preview da imagem"
+                      className="w-full h-full object-contain bg-muted/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                      disabled={uploadingImage}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Área de upload */}
+                <div className="border-2 border-dashed border-border hover:border-primary/50 rounded-lg p-6 text-center transition-colors">
+                  <input
+                    type="file"
+                    id="image_upload"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    disabled={uploadingImage}
+                  />
+                  <label
+                    htmlFor="image_upload"
+                    className={`cursor-pointer flex flex-col items-center gap-2 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      {uploadingImage ? (
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Plus className="w-6 h-6 text-primary" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {selectedImage ? "Imagem selecionada" : uploadingImage ? "Enviando imagem..." : "Escolher imagem"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {selectedImage 
+                          ? selectedImage.name
+                          : "Clique para escolher uma imagem do seu computador"
+                        }
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        PNG, JPG, GIF até 5MB
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Input de URL (alternativa) */}
+                <div>
+                  <label htmlFor="image_url" className="block text-xs text-muted-foreground mb-2">
+                    Ou cole uma URL de imagem:
+                  </label>
+                  <input
+                    id="image_url"
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => {
+                      setFormData({ ...formData, image_url: e.target.value });
+                      if (e.target.value && !selectedImage) {
+                        setImagePreview(e.target.value);
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded text-foreground focus:outline-none focus:border-primary transition-colors"
+                    placeholder="https://exemplo.com/imagem.jpg"
+                    disabled={!!selectedImage || uploadingImage}
+                  />
+                  {selectedImage && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Para usar uma URL, remova primeiro a imagem selecionada
+                    </p>
+                  )}
+                </div>
+              </div>
 
               {/* Seção: Vitalidade */}
               <div className="space-y-4">
@@ -839,7 +1068,6 @@ const NPCs = () => {
                       className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
-                  
                 </div>
               </div>
               
@@ -859,7 +1087,7 @@ const NPCs = () => {
                     onChange={(e) => setFormData({ ...formData, attacks: e.target.value })}
                     className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none"
                     placeholder="Ex: Espada Longa: +5 para acertar, 1d8+2 cortante
-  Arco Curto: +4 para acertar, 1d6+1 perfurante (alcance 24m/96m)"
+Arco Curto: +4 para acertar, 1d6+1 perfurante (alcance 24m/96m)"
                   />
                 </div>
                 
@@ -873,16 +1101,16 @@ const NPCs = () => {
                     onChange={(e) => setFormData({ ...formData, attributes: e.target.value })}
                     className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none"
                     placeholder="Força: 10
-                    Destreza: 12
-                    Constituição: 14
-                    Inteligência: 8
-                    Sabedoria: 10
-                    Carisma: 16"
+Destreza: 12
+Constituição: 14
+Inteligência: 8
+Sabedoria: 10
+Carisma: 16"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="attributes" className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="skills" className="block text-sm font-medium text-foreground mb-2">
                     Perícias
                   </label>
                   <textarea
@@ -890,10 +1118,9 @@ const NPCs = () => {
                     value={formData.skills}
                     onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
                     className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none"
-                    placeholder="
-                    Medicina: 10
-                    Acrobacia: 12
-                    Ladinagem: 14"
+                    placeholder="Medicina: 10
+Acrobacia: 12
+Ladinagem: 14"
                   />
                 </div>
                 
@@ -907,36 +1134,22 @@ const NPCs = () => {
                     onChange={(e) => setFormData({ ...formData, spells: e.target.value })}
                     className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none"
                     placeholder="Bola de Fogo (3/dia): 8d6 de dano de fogo, CD 15
-  Cura Moderada (2/dia): 3d8+4 pontos de vida
-  Invisibilidade (1/dia): Duração 1 hora"
+Cura Moderada (2/dia): 3d8+4 pontos de vida
+Invisibilidade (1/dia): Duração 1 hora"
                   />
                 </div>
               </div>
               
-              {/* Seção: Anotações e Imagem */}
+              {/* Seção: Anotações */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-purple-500 flex items-center gap-2">
                   <Brain className="w-4 h-4" />
-                  Anotações e Aparência
+                  Anotações do Mestre
                 </h4>
                 
                 <div>
-                  <label htmlFor="image_url" className="block text-sm font-medium text-foreground mb-2">
-                    URL da Imagem (opcional)
-                  </label>
-                  <input
-                    id="image_url"
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-background border-2 border-border rounded-lg text-foreground focus:outline-none focus:border-primary transition-colors"
-                    placeholder="https://exemplo.com/imagem-npc.jpg"
-                  />
-                </div>
-                
-                <div>
                   <label htmlFor="observation" className="block text-sm font-medium text-foreground mb-2">
-                    Observações do Mestre
+                    Observações
                   </label>
                   <textarea
                     id="observation"
@@ -957,14 +1170,25 @@ const NPCs = () => {
                     resetForm();
                   }}
                   className="flex-1 px-6 py-3 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium"
+                  disabled={uploadingImage}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground rounded-lg transition-all font-medium"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-accent hover:shadow-[var(--shadow-glow)] text-primary-foreground rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={uploadingImage}
                 >
-                  {editingNpc ? "Atualizar NPC" : "Criar NPC"}
+                  {uploadingImage ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Enviando imagem...
+                    </span>
+                  ) : editingNpc ? (
+                    "Atualizar NPC"
+                  ) : (
+                    "Criar NPC"
+                  )}
                 </button>
               </div>
             </form>

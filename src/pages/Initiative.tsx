@@ -124,8 +124,7 @@ const Initiative = () => {
   );
 
   // Função para consultar status
-  const handleConsultStatus = (status: StatusType) => {
-    console.log('🔍 Consultando status:', status);
+  const handleConsultStatus = (status: StatusType) => {    
     setSelectedStatus(status);
   };
 
@@ -199,6 +198,14 @@ const Initiative = () => {
     
     setLastRoll({ dice, result });
   };
+  useEffect(() => {
+    if (dialogOpen) {
+      // Carrega os personagens do tipo atual quando o diálogo abre
+      if (formData.character_type) {
+        fetchAvailableCharacters(formData.character_type);
+      }
+    }
+  }, [dialogOpen]);
 
   // Efeito para controlar o timer
   useEffect(() => {
@@ -330,36 +337,17 @@ const Initiative = () => {
 
   const fetchStatusTypes = async () => {
     try {
-      console.log('🔍 DEBUG: Iniciando fetchStatusTypes');
-      
-      // Teste 1: Verificar conexão básica
-      console.log('🔗 Testando conexão com Supabase...');
-      console.log('📡 URL do Supabase:', supabase.supabaseUrl);
-      
-      // Teste 2: Consulta BEM SIMPLES primeiro
-      console.log('📋 Teste 1: Consulta sem order by');
+  
       const testQuery = await supabase
         .from('character_status_types')
         .select('count', { count: 'exact', head: true });
-      
-      console.log('📊 Contagem total:', testQuery);
-      
+ 
       // Teste 3: Consulta completa
-      console.log('📋 Teste 2: Consulta completa');
       const { data, error, status, statusText } = await supabase
         .from('character_status_types')
         .select('id, name, color, description')
         .order('name');
-      
-      console.log('📦 RESULTADO COMPLETO:', {
-        status,
-        statusText,
-        error,
-        data: data ? `Array com ${data.length} itens` : 'null/undefined',
-        isArray: Array.isArray(data),
-        firstItem: data?.[0]
-      });
-      
+                  
       if (error) {
         console.error('❌ Erro detalhado:', {
           message: error.message,
@@ -374,13 +362,9 @@ const Initiative = () => {
       }
       
       if (data && data.length > 0) {
-        console.log('✅ DADOS RECEBIDOS!');
-        console.log('📝 Primeiros 3 itens:', data.slice(0, 3));
         setStatusTypes(data);
       } else {
-        console.log('⚠️ Dados vazios ou null');
-        // Verificar se é problema de permissões
-        checkTablePermissions();
+        
         useFallback();
       }
       
@@ -396,7 +380,7 @@ const Initiative = () => {
   
   // Função auxiliar para fallback
   const useFallback = () => {
-    console.log('🔄 Usando fallback de dados');
+
     const sampleData = [
       {
         id: "fallback-1",
@@ -424,40 +408,11 @@ const Initiative = () => {
       }
     ];
     
-    console.log('🎯 Dados de fallback carregados:', sampleData.length, 'itens');
     setStatusTypes(sampleData);
   };
   
   // Função para verificar permissões
-  const checkTablePermissions = async () => {
-    try {
-      console.log('🔐 Verificando permissões da tabela...');
-      // Tenta inserir um registro temporário (será revertido)
-      const testInsert = await supabase
-        .from('character_status_types')
-        .insert({
-          name: 'TEST_PERMISSION',
-          color: '#000000',
-          description: 'Teste de permissão - apagar depois'
-        })
-        .select();
-      
-      console.log('📝 Teste de inserção:', testInsert);
-      
-      // Se conseguiu inserir, apaga o teste
-      if (testInsert.data) {
-        const deleteTest = await supabase
-          .from('character_status_types')
-          .delete()
-          .eq('name', 'TEST_PERMISSION');
-        
-        console.log('🗑️ Teste apagado:', deleteTest);
-      }
-      
-    } catch (error) {
-      console.log('🔒 Erro de permissão:', error);
-    }
-  };
+ 
 
   // Funções para controle de combate
   const startCombat = () => {
@@ -981,28 +936,7 @@ const Initiative = () => {
                                     ))}
                                   </select>
                                 </div>
-                                
-                                <div className="space-y-2">
-                                  <Label htmlFor="duration" className="text-foreground/90">Duração (rodadas)</Label>
-                                  <Input
-                                    id="duration"
-                                    type="number"
-                                    value={statusFormData.duration}
-                                    onChange={(e) => setStatusFormData({ ...statusFormData, duration: parseInt(e.target.value) || 0 })}
-                                    className="border-border/50 focus:border-primary"
-                                  />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <Label htmlFor="status_notes" className="text-foreground/90">Notas do Status</Label>
-                                  <Input
-                                    id="status_notes"
-                                    value={statusFormData.notes}
-                                    onChange={(e) => setStatusFormData({ ...statusFormData, notes: e.target.value })}
-                                    className="border-border/50 focus:border-primary"
-                                  />
-                                </div>
-                                
+                                                               
                                 <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent 
                                                                hover:from-primary/90 hover:to-accent/90
                                                                border border-primary/30 shadow-lg">
@@ -1314,14 +1248,15 @@ const Initiative = () => {
                                    focus:border-primary focus:outline-none"
                         >
                           <option value="player">Jogador</option>
-                          <option value="npc">NPC</option>
-                          <option value="manual">Manual (digitar dados)</option>
+                          <option value="npc">NPC</option>                         
                         </select>
                       </div>
   
                       {formData.character_type !== 'manual' && (
                         <div className="space-y-2">
-                          <Label htmlFor="character_select" className="text-foreground/90">Selecionar Personagem</Label>
+                          <Label htmlFor="character_select" className="text-foreground/90">
+                            Selecionar Personagem
+                          </Label>
                           {loadingCharacters ? (
                             <div className="text-center py-4">
                               <p className="text-muted-foreground">Carregando personagens...</p>
@@ -1332,23 +1267,35 @@ const Initiative = () => {
                               value={formData.source_character_id}
                               onChange={(e) => {
                                 const selectedId = e.target.value;
-                                const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
-                                
-                                if (selectedCharacter) {
+                                if (selectedId === "") {
+                                  // Se selecionar "Selecione um personagem", limpa os dados
                                   setFormData({
                                     ...formData,
-                                    source_character_id: selectedId,
-                                    name: selectedCharacter.name,
-                                    current_hp: selectedCharacter.current_hp || 0,
-                                    max_hp: selectedCharacter.max_hp || 0,
-                                    armor_class: selectedCharacter.armor_class || 10
+                                    source_character_id: "",
+                                    name: "",
+                                    current_hp: 0,
+                                    max_hp: 0,
+                                    armor_class: 10
                                   });
+                                } else {
+                                  const selectedCharacter = availableCharacters.find(char => char.id === selectedId);
+                                  
+                                  if (selectedCharacter) {
+                                    setFormData({
+                                      ...formData,
+                                      source_character_id: selectedId,
+                                      name: selectedCharacter.name,
+                                      current_hp: selectedCharacter.current_hp || 0,
+                                      max_hp: selectedCharacter.max_hp || 0,
+                                      armor_class: selectedCharacter.armor_class || 10
+                                    });
+                                  }
                                 }
                               }}
                               className="w-full p-2 border border-border/50 rounded-md bg-card 
-                                       focus:border-primary focus:outline-none"
+                                      focus:border-primary focus:outline-none"
                             >
-                              <option value="">Selecione um personagem</option>
+                              <option value="">Selecione um personagem</option> {/* Esta sempre será a opção padrão */}
                               {availableCharacters.map((character) => (
                                 <option key={character.id} value={character.id}>
                                   {character.name} (HP: {character.current_hp || 0}/{character.max_hp || 0}, CA: {character.armor_class || 10})
@@ -1387,50 +1334,12 @@ const Initiative = () => {
   
                     {(formData.character_type === 'manual' || !formData.source_character_id) && (
                       <>
-                        <div className="space-y-2">
-                          <Label htmlFor="name" className="text-foreground/90">Nome *</Label>
-                          <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="border-border/50 focus:border-primary"
-                            required
-                          />
-                        </div>
+                      
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="current_hp" className="text-foreground/90">HP Atual</Label>
-                            <Input
-                              id="current_hp"
-                              type="number"
-                              value={formData.current_hp}
-                              onChange={(e) => setFormData({ ...formData, current_hp: parseInt(e.target.value) || 0 })}
-                              className="border-border/50 focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="max_hp" className="text-foreground/90">HP Máximo</Label>
-                            <Input
-                              id="max_hp"
-                              type="number"
-                              value={formData.max_hp}
-                              onChange={(e) => setFormData({ ...formData, max_hp: parseInt(e.target.value) || 0 })}
-                              className="border-border/50 focus:border-primary"
-                            />
-                          </div>
-                        </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="armor_class" className="text-foreground/90">Classe de Armadura</Label>
-                          <Input
-                            id="armor_class"
-                            type="number"
-                            value={formData.armor_class}
-                            onChange={(e) => setFormData({ ...formData, armor_class: parseInt(e.target.value) || 10 })}
-                            className="border-border/50 focus:border-primary"
-                          />
-                        </div>
+                          
+                        
+                        
                       </>
                     )}
   
@@ -1444,17 +1353,7 @@ const Initiative = () => {
                         className="border-border/50 focus:border-primary"
                         required
                       />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="notes" className="text-foreground/90">Notas</Label>
-                      <Input
-                        id="notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="border-border/50 focus:border-primary"
-                      />
-                    </div>
+                    </div>                
                     
                     <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent 
                                                    hover:from-primary/90 hover:to-accent/90
