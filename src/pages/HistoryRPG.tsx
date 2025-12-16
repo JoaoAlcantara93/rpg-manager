@@ -11,15 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Trash2, Search, ArrowLeft, X, Edit, BookOpen, Clock, MapPin, Eye, EyeOff, Users, User, Book, Scroll, Swords ,MoreHorizontal, Dices, BarChart3,
-  ChevronRight,
-  Calendar,
-  Zap, ChevronDown, ChevronUp,
-  
-  // Outros ícones que podem estar no código:
-  Users as UsersIcon,
-  Settings,
-  LogOut,
-  } from "lucide-react";
+  ChevronRight, Calendar, Zap, ChevronDown, ChevronUp, Users as UsersIcon, Settings, LogOut} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -126,7 +118,7 @@ const HistoryRPG = () => {
       }
 
       // Carregar campanhas do usuário
-      console.log("📋 Buscando campanhas...");
+      
       const { data: campaignsData, error: campaignsError } = await supabase
         .from("campaigns")
         .select("*")
@@ -137,7 +129,7 @@ const HistoryRPG = () => {
         throw new Error(`Erro ao carregar campanhas: ${campaignsError.message}`);
       }
 
-      console.log("✅ Campanhas encontradas:", campaignsData?.length || 0);
+      
       setCampaigns(campaignsData || []);
 
       // Selecionar a primeira campanha automaticamente
@@ -184,7 +176,7 @@ const toggleAllNotes = () => {
     if (!selectedCampaignId) return;
     
     try {
-      console.log("📝 Buscando anotações para campanha:", selectedCampaignId);
+      
       const { data: notesData, error: notesError } = await supabase
         .from("campaign_notes")
         .select("*")
@@ -196,7 +188,7 @@ const toggleAllNotes = () => {
         throw new Error(`Erro ao carregar anotações: ${notesError.message}`);
       }
 
-      console.log("✅ Anotações encontradas:", notesData?.length || 0);
+      
       setNotes(notesData || []);
 
     } catch (error: any) {

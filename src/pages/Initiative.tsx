@@ -60,7 +60,7 @@ interface NpcCharacter extends BaseCharacter {
 
 // Tipo para os status
 interface StatusType {
-  id: string; // Alterado para string pois no Supabase geralmente são UUIDs
+  id: string; 
   name: string;
   color: string;
   description: string;
@@ -116,17 +116,7 @@ const Initiative = () => {
     duration: 0,
     notes: "",
   });
-
-  const updateHP = (id: string, amount: number) => {
-    setCombatants(prev => prev.map(combatant => {
-      if (combatant.id === id) {
-        const newHP = Math.max(0, Math.min(combatant.hpMax, combatant.hpCurrent + amount));
-        return { ...combatant, hpCurrent: newHP };
-      }
-      return combatant;
-    }));
-  };
-
+  
   // Filtragem dos status
   const filteredStatusTypes = statusTypes.filter(status =>
     status.name.toLowerCase().includes(searchStatus.toLowerCase()) ||
@@ -208,9 +198,9 @@ const Initiative = () => {
     
     setLastRoll({ dice, result });
   };
+  /*Carrega os personagens do tipo atual quando o diálogo abre*/
   useEffect(() => {
-    if (dialogOpen) {
-      // Carrega os personagens do tipo atual quando o diálogo abre
+    if (dialogOpen) {      
       if (formData.character_type) {
         fetchAvailableCharacters(formData.character_type);
       }
@@ -960,26 +950,18 @@ const Initiative = () => {
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
-                    
-                  </div>
-                  
+                  </div>                  
 
                   {/* Botões de Ação */}
                   <div className="flex items-center gap-2">
                     <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedCharacter(character)}
-                          className="h-8 border-border hover:border-primary/50"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setSelectedCharacter(character)} className="h-8 border-border hover:border-primary/50">
                           <Plus className="w-4 h-4 mr-1" />
                           Status
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
-                                              shadow-[var(--shadow-glow)] max-w-md">
+                      <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 shadow-[var(--shadow-glow)] max-w-md">
                         <DialogHeader>
                           <DialogTitle className="text-xl">
                             Adicionar Status
