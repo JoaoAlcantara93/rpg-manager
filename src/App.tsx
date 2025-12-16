@@ -41,11 +41,12 @@ const App = () => (
           
           {/* Funcionalidades principais */}
           <Route path="/dashboard" element={<HistoryRPG />} />
+          <Route path="/principal" element={<Dashboard />} />
           <Route path="/dice" element={<Dice />} />
           <Route path="/npcs" element={<NPCs />} />
           <Route path="/players" element={<Players />} />
           <Route path="/initiative" element={<Initiative />} />
-          <Route path="/history" element={<HistoryRPG />} />
+          
           
           <Route path="/mapmanager" element={<MapManager/>} />
           <Route path="/rules" element={<RulesRpg />} />

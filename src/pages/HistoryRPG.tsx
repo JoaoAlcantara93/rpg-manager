@@ -505,7 +505,8 @@ const toggleAllNotes = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
-                                      shadow-[var(--shadow-glow)] max-w-2xl">
+                                      shadow-[var(--shadow-glow)] max-w-2xl"
+                              onInteractOutside={(e) => e.preventDefault()} >
                 <DialogHeader>
                   <DialogTitle className="text-xl">
                     {selectedNote ? "✏️ Editar Anotação" : "📝 Nova Anotação"}
@@ -646,7 +647,7 @@ const toggleAllNotes = () => {
                              hover:from-primary/90 hover:to-accent/90
                              border border-primary/30 shadow-lg"
                   >
-                    {selectedNote ? "📝 Atualizar Anotação" : "✨ Criar Anotação"}
+                    {selectedNote ? "Atualizar Anotação" : "Criar Anotação"}
                   </Button>
                 </form>
               </DialogContent>
@@ -1046,19 +1047,16 @@ const toggleAllNotes = () => {
                   Sessão {lastSession.session_number}
                 </div>
 
+                <div className="text-xs text-muted-foreground/70 mt-2">
+                  📅 {new Date(lastSession.updated_at).toLocaleDateString("pt-BR")}
+                </div>
+
                 {lastSession.session_title && (
                   <div className="text-sm font-medium mt-1">
                     {lastSession.session_title}
                   </div>
-                )}
-
-                <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                  {lastSession.title}
-                </div>
-
-                <div className="text-xs text-muted-foreground/70 mt-2">
-                  📅 {new Date(lastSession.updated_at).toLocaleDateString("pt-BR")}
-                </div>
+                )}             
+               
               </div>
             </CardContent>
           </Card>

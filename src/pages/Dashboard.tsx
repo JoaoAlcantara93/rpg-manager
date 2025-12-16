@@ -6,10 +6,43 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Dices, Users, Swords, ListOrdered, Save, Shield, BookOpen, Settings, Scroll,MapPin, User, Book } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Dices,
+  Users,
+  Swords,
+  Scroll,
+  Save,
+  Heart,
+  Shield,
+  Skull,
+  Plus,
+  Minus,
+  ChevronRight,
+  ChevronLeft,
+  BookOpen,
+  Settings,
+  Clock,
+  MapPin,
+  User,
+  Book,
+  Sparkles,
+  Search,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
-// Interface da Campanha compatível com Supabase
+// Interfaces
 interface Campaign {
   id: string;
   name: string;
@@ -21,6 +54,35 @@ interface Campaign {
   user_id: string;
 }
 
+interface Combatant {
+  id: string;
+  name: string;
+  initiative: number;
+  hpCurrent: number;
+  hpMax: number;
+  type: 'player' | 'npc' | 'monster';
+  conditions: string[];
+  ac?: number;
+}
+
+interface PlayerCharacter {
+  id: string;
+  name: string;
+  class: string;
+  level: number;
+  hpCurrent: number;
+  hpMax: number;
+  conditions: string[];
+  ac: number;
+}
+
+interface StatusType {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -28,11 +90,51 @@ const Dashboard = () => {
   const [savingNotes, setSavingNotes] = useState(false);
   const [lastRoll, setLastRoll] = useState<{ dice: string; result: number } | null>(null);
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
+  
+  // Estado para Combate Ativo
+  const [combatActive, setCombatActive] = useState(false);
+  const [combatants, setCombatants] = useState<Combatant[]>([
+    { id: '1', name: 'Aragorn', initiative: 18, hpCurrent: 42, hpMax: 42, type: 'player', conditions: [], ac: 16 },
+    { id: '2', name: 'Goblin Arqueiro', initiative: 15, hpCurrent: 7, hpMax: 7, type: 'monster', conditions: ['Ferido'], ac: 13 },
+    { id: '3', name: 'Legolas', initiative: 22, hpCurrent: 28, hpMax: 28, type: 'player', conditions: [], ac: 15 },
+  ]);
+  const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
+  
+  // Estado para Party
+  const [playerCharacters, setPlayerCharacters] = useState<PlayerCharacter[]>([
+    { id: '1', name: 'Aragorn', class: 'Guerreiro', level: 5, hpCurrent: 42, hpMax: 42, conditions: [], ac: 16 },
+    { id: '2', name: 'Legolas', class: 'Arqueiro', level: 5, hpCurrent: 28, hpMax: 28, conditions: [], ac: 15 },
+    { id: '3', name: 'Gandalf', class: 'Mago', level: 5, hpCurrent: 22, hpMax: 22, conditions: ['Fatigado'], ac: 12 },
+  ]);
 
+  // Estado para Status
+  const [statusSearch, setStatusSearch] = useState("");
+  const [filteredStatusTypes, setFilteredStatusTypes] = useState<StatusType[]>([]);
+  const [statusTypes, setStatusTypes] = useState<StatusType[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<StatusType | null>(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [currentCombatantForStatus, setCurrentCombatantForStatus] = useState<Combatant | null>(null);
+
+  // Carregar dados
   useEffect(() => {
-    //console.log("🏠 Dashboard montado");
     checkAuthAndLoadData();
   }, [navigate]);
+
+  useEffect(() => {
+    loadStatusTypes();
+  }, []);
+
+  useEffect(() => {
+    if (statusSearch.trim() === "") {
+      setFilteredStatusTypes(statusTypes);
+    } else {
+      const filtered = statusTypes.filter(status =>
+        status.name.toLowerCase().includes(statusSearch.toLowerCase()) ||
+        status.description.toLowerCase().includes(statusSearch.toLowerCase())
+      );
+      setFilteredStatusTypes(filtered);
+    }
+  }, [statusSearch, statusTypes]);
 
   const checkAuthAndLoadData = async () => {
     try {
@@ -42,23 +144,17 @@ const Dashboard = () => {
         return;
       }
       
-      // Verificar se tem campanha selecionada
       const currentCampaignId = localStorage.getItem('current-campaign');
-      //console.log("📋 Campaign ID do localStorage:", currentCampaignId);
-      
       if (!currentCampaignId) {
-        console.log("❌ Nenhuma campanha selecionada");
         navigate('/campaign-select');
         return;
       }
       
-      // Carregar campanha atual do Supabase
       await loadCurrentCampaign(currentCampaignId);
-      // Carregar anotações salvas
       await loadCampaignNotes();
       setLoading(false);
     } catch (error) {
-      console.error('❌ Erro ao carregar dados:', error);
+      console.error('Erro ao carregar dados:', error);
       toast.error("Erro ao carregar dados da campanha");
       setLoading(false);
     }
@@ -66,16 +162,11 @@ const Dashboard = () => {
 
   const loadCurrentCampaign = async (campaignId: string) => {
     try {
-      //console.log("🔄 Carregando campanha do Supabase:", campaignId);
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log("❌ Usuário não autenticado");
         navigate("/auth");
         return;
       }
-
-      console.log("👤 Usuário:", user.id);
 
       const { data, error } = await supabase
         .from('campaigns')
@@ -84,32 +175,19 @@ const Dashboard = () => {
         .eq('user_id', user.id)
         .single();
 
-      console.log("📊 Resposta da query:", { data, error });
-
       if (error) {
-        console.error("❌ Erro ao buscar campanha:", error);
-        
         if (error.code === 'PGRST116') {
-          toast.error("Campanha não encontrada ou você não tem permissão para acessá-la");
-        } else {
-          toast.error(`Erro: ${error.message}`);
+          toast.error("Campanha não encontrada");
         }
         navigate('/campaign-select');
         return;
       }
 
       if (data) {
-        //console.log("✅ Campanha carregada:", data);
         setCurrentCampaign(data);
         toast.success(`Bem-vindo à campanha: ${data.name}`);
-      } else {
-        //console.log("❌ Nenhuma campanha encontrada");
-        toast.error("Campanha não encontrada");
-        navigate('/campaign-select');
       }
-
     } catch (error) {
-      //console.error('❌ Erro inesperado:', error);
       toast.error("Erro ao carregar campanha");
       navigate('/campaign-select');
     }
@@ -120,26 +198,17 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Primeiro verificar se a tabela campaign_notes existe
-      //console.log("📝 Carregando anotações...");
-      
       const { data, error } = await supabase
         .from('campaign_notes')
         .select('notes')
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 é "no rows returned"
-        console.error("❌ Erro ao carregar anotações:", error);
-        return;
-      }
-
-      if (data) {
-       // console.log("✅ Anotações carregadas");
+      if (!error && data) {
         setCampaignNotes(data.notes);
       }
-    } catch (error: any) {
-      console.error('❌ Erro ao carregar anotações:', error);
+    } catch (error) {
+      console.error('Erro ao carregar anotações:', error);
     }
   };
 
@@ -149,8 +218,6 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      //console.log("💾 Salvando anotações...");
-
       const { error } = await supabase
         .from('campaign_notes')
         .upsert({
@@ -159,46 +226,147 @@ const Dashboard = () => {
           updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        console.error("❌ Erro ao salvar anotações:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log("✅ Anotações salvas com sucesso!");
-      toast.success("Anotações salvas com sucesso!");
+      toast.success("Anotações salvas!");
     } catch (error: any) {
-      console.error('❌ Erro ao salvar anotações:', error);
       toast.error("Erro ao salvar anotações");
     } finally {
       setSavingNotes(false);
     }
   };
 
+  const loadStatusTypes = async () => {
+    try {
+      // ATENÇÃO: Verifique o nome correto da sua tabela de status
+      // O erro indica que sua tabela se chama 'character_status_types', não 'status_types'
+      const { data, error } = await supabase
+        .from('character_status_types') // Altere para o nome correto da sua tabela
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        console.error('Erro ao carregar status:', error);
+        toast.error("Erro ao carregar tipos de status");
+        return;
+      }
+      
+      if (data) {
+        setStatusTypes(data);
+        setFilteredStatusTypes(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar status:', error);
+    }
+  };
+
+  const handleConsultStatus = (status: StatusType) => {
+    setSelectedStatus(status);
+  };
+
+  // Funções de Combate
+  const startCombat = () => {
+    setCombatActive(true);
+    setCurrentTurnIndex(0);
+    toast.success("Combate iniciado!");
+  };
+
+  const endCombat = () => {
+    setCombatActive(false);
+    toast.success("Combate encerrado!");
+  };
+
+  const nextTurn = () => {
+    setCurrentTurnIndex((prev) => (prev + 1) % combatants.length);
+  };
+
+  const previousTurn = () => {
+    setCurrentTurnIndex((prev) => (prev - 1 + combatants.length) % combatants.length);
+  };
+
+  const updateHP = (id: string, amount: number) => {
+    setCombatants(prev => prev.map(combatant => {
+      if (combatant.id === id) {
+        const newHP = Math.max(0, Math.min(combatant.hpMax, combatant.hpCurrent + amount));
+        return { ...combatant, hpCurrent: newHP };
+      }
+      return combatant;
+    }));
+  };
+
+  const updateHPByValue = (id: string, newValue: number) => {
+    setCombatants(prev => prev.map(combatant => {
+      if (combatant.id === id) {
+        const newHP = Math.max(0, Math.min(combatant.hpMax, newValue));
+        return { ...combatant, hpCurrent: newHP };
+      }
+      return combatant;
+    }));
+  };
+
+  const addCondition = (id: string, condition: string) => {
+    setCombatants(prev => prev.map(combatant => {
+      if (combatant.id === id && !combatant.conditions.includes(condition)) {
+        return { ...combatant, conditions: [...combatant.conditions, condition] };
+      }
+      return combatant;
+    }));
+    setShowStatusModal(false);
+    toast.success(`Status ${condition} adicionado!`);
+  };
+
+  const removeCondition = (id: string, condition: string) => {
+    setCombatants(prev => prev.map(combatant => {
+      if (combatant.id === id) {
+        return { ...combatant, conditions: combatant.conditions.filter(c => c !== condition) };
+      }
+      return combatant;
+    }));
+    toast.success(`Status ${condition} removido!`);
+  };
+
+  const openStatusModal = (combatant: Combatant) => {
+    setCurrentCombatantForStatus(combatant);
+    setShowStatusModal(true);
+    setStatusSearch("");
+  };
+
+  // Funções de Rolagem
   const rollDice = (dice: string) => {
+    const [num, sides] = dice.split('d').map(Number);
     let result = 0;
-    
-    if (dice === '1d20') {
-      result = Math.floor(Math.random() * 20) + 1;
-    } else if (dice === '1d6') {
-      result = Math.floor(Math.random() * 6) + 1;
-    } else if (dice === '1d8') {
-      result = Math.floor(Math.random() * 8) + 1;
-    } else if (dice === '1d100') {
-      result = Math.floor(Math.random() * 100) + 1;
-    } else if (dice === '1d4') {
-      result = Math.floor(Math.random() * 4) + 1;
-    } else if (dice === '1d12') {
-      result = Math.floor(Math.random() * 12) + 1;
+    for (let i = 0; i < num; i++) {
+      result += Math.floor(Math.random() * sides) + 1;
     }
     
     setLastRoll({ dice, result });
     toast.success(`🎲 ${dice}: ${result}`);
   };
 
+  const rollInitiative = () => {
+    const updatedCombatants = combatants.map(combatant => ({
+      ...combatant,
+      initiative: Math.floor(Math.random() * 20) + 1
+    }));
+    
+    // Ordenar por iniciativa (maior para menor)
+    updatedCombatants.sort((a, b) => b.initiative - a.initiative);
+    setCombatants(updatedCombatants);
+    toast.success("Iniciativas roladas!");
+  };
+
+  const handleManualDamage = (id: string) => {
+    const input = prompt("Insira o valor (negativo para dano, positivo para cura):");
+    if (input) {
+      const value = parseInt(input) || 0;
+      updateHP(id, value);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <Dices className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
             <p className="text-muted-foreground">Carregando campanha...</p>
@@ -208,236 +376,534 @@ const Dashboard = () => {
     );
   }
 
-  const menuItems = [
-    {
-      title: "NPCs",
-      description: "Gerencie seus NPCs",
-      icon: Users,
-      path: "/npcs",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Aventureiros",
-      description: "Gerencie seus jogadores",
-      icon: User,
-      path: "/players",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Combate",
-      description: "Gerencie os combates",
-      icon: Swords,
-      path: "/initiative",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Mapas",
-      description: "Consule mapas",
-      icon: MapPin,
-      path: "*",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "História",
-      description: "Organize enredos e missões",
-      icon: Scroll,
-      path: "/history",
-      gradient: "from-secondary to-accent",
-    },
-    {
-      title: "Regras",
-      description: "Consulta os livros",
-      icon: Book,
-      path: "/*",
-      gradient: "from-secondary to-accent",
-    }
-  ];
-
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8 px-4 sm:px-6 lg:px-8">
-        {/* Header com informações da campanha */}
-        <div className="space-y-4">
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Bem-vindo, Mestre!
-            </h2>
-            <p className="text-muted-foreground text-base sm:text-lg">
-              Escolha uma opção para gerenciar sua campanha
+      <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
+        {/* Header da Campanha */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">
+              {currentCampaign?.name || "Dashboard"}
+            </h1>
+            <p className="text-muted-foreground">
+              {currentCampaign?.system} • Gerenciamento de Sessão
             </p>
           </div>
-          
-          {currentCampaign && (
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  {/* Ícone */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center shadow-lg flex-shrink-0">
-                    <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                  </div>
-                  
-                  {/* Informações da campanha */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                      {currentCampaign.name}
-                    </h3>
-                    
-                    {/* Informações em linha para desktop, coluna para mobile */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-muted-foreground text-sm sm:text-base">
-                      <span className="flex items-center gap-1">
-                        <span className="font-semibold">Sistema:</span> 
-                        <span className="truncate">{currentCampaign.system}</span>
-                      </span>
-                      
-                      <span className="hidden sm:inline">•</span>
-                                          
-                      <span className="flex items-center gap-1">
-                        <span className="font-semibold">Criada em:</span> 
-                        <span>{new Date(currentCampaign.created_at).toLocaleDateString('pt-BR')}</span>
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Botão trocar campanha */}
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate('/campaign-select')}
-                    className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap "
-                    size="sm"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Trocar Campanha
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => navigate('/campaign-select')}
+            className="gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Trocar Campanha
+          </Button>
         </div>
 
-        {/* Grid Principal */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-          {/* Coluna principal com os cards de menu */}
-          <div className="xl:col-span-2">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Card
-                    key={item.path}
-                    className="card-pergaminho cursor-pointer transition-all duration-300 hover:scale-105 border hover:border-primary/30"
-                    onClick={() => navigate(item.path)}
-                  >
-                    <CardHeader className="space-y-3 p-4 sm:p-6 relative z-10">
-                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg border border-white/10`}>
-                        <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                      </div>
-                      <CardTitle className="text-xl sm:text-2xl text-foreground font-bold">
-                        {item.title}
-                      </CardTitle>
-                      <CardDescription className="text-muted-foreground/90 text-sm sm:text-base leading-relaxed">
-                        {item.description}
-                      </CardDescription>
-                    </CardHeader>
-                  </Card>
-                );
-              })}
-            </div>
+        {/* Tabs Principais */}
+        <Tabs defaultValue="session" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="session">Sessão Ativa</TabsTrigger>
+            <TabsTrigger value="party">Party</TabsTrigger>
+            <TabsTrigger value="notes">Anotações</TabsTrigger>
+          </TabsList>
 
-            {/* Card de Rolagem Rápida */}
-            <Card className="card-pergaminho mt-6">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                  <Dices className="w-5 h-5" />
-                  <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                    Rolagem Rápida
-                  </span>
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Role dados rapidamente durante a sessão
-                </CardDescription>
+          {/* Tab: Sessão Ativa */}
+          <TabsContent value="session" className="space-y-6">
+            {/* Widget de Combate */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Swords className="w-5 h-5 text-primary" />
+                    <CardTitle>Combate Ativo</CardTitle>
+                    <Badge variant={combatActive ? "destructive" : "outline"}>
+                      {combatActive ? "EM COMBATE" : "Inativo"}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    {!combatActive ? (
+                      <Button onClick={startCombat} size="sm" className="gap-2">
+                        <Swords className="w-4 h-4" />
+                        Iniciar Combate
+                      </Button>
+                    ) : (
+                      <>
+                        <Button onClick={rollInitiative} variant="outline" size="sm">
+                          Rolar Iniciativa
+                        </Button>
+                        <Button onClick={endCombat} variant="destructive" size="sm">
+                          Encerrar
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0">
-                <div className="flex flex-col gap-4">
-                  {/* Botões de Dados */}
-                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                    {[
+              
+              {combatActive && (
+                <CardContent>
+                  {/* Controles de Turno */}
+                  <div className="flex items-center justify-between mb-4 p-4 bg-muted/50 rounded-lg">
+                    <Button variant="outline" onClick={previousTurn}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">Turno Atual</div>
+                      <div className="text-2xl font-bold">
+                        {combatants[currentTurnIndex]?.name}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Iniciativa: {combatants[currentTurnIndex]?.initiative}
+                      </div>
+                    </div>
+                    
+                    <Button variant="outline" onClick={nextTurn}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Lista de Combatentes */}
+                  <div className="space-y-3">
+                    {combatants.sort((a, b) => b.initiative - a.initiative).map((combatant, index) => {
+                      const hpPercentage = (combatant.hpCurrent / combatant.hpMax) * 100;
+                      const hpColor = 
+                        hpPercentage > 75 ? "bg-green-500" :
+                        hpPercentage > 50 ? "bg-yellow-500" :
+                        hpPercentage > 25 ? "bg-orange-500" : "bg-red-500";
                       
-                      { dice: '1d4', label: '1d4' },
-                      { dice: '1d6', label: '1d6' },
-                      { dice: '1d8', label: '1d8' },
-                      { dice: '1d12', label: '1d12' },
-                      { dice: '1d20', label: '1d20' },
-                      { dice: '1d100', label: '1d100' },
-                                           
-                    ].map(({ dice, label }) => (
+                      return (
+                        <div
+                          key={combatant.id}
+                          className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border ${
+                            index === currentTurnIndex 
+                              ? 'bg-primary/10 border-primary shadow-sm' 
+                              : 'bg-card border-border'
+                          }`}
+                        >
+                          {/* Lado Esquerdo: Informações */}
+                          <div className="flex items-center gap-3 mb-3 sm:mb-0">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              combatant.type === 'player' 
+                                ? 'bg-primary/10 text-primary' 
+                                : 'bg-destructive/10 text-destructive'
+                            }`}>
+                              {combatant.type === 'player' ? (
+                                <User className="w-5 h-5" />
+                              ) : (
+                                <Skull className="w-5 h-5" />
+                              )}
+                            </div>
+                            
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-lg truncate">{combatant.name}</h3>
+                                <Badge variant="outline" className="text-xs">
+                                  CA {combatant.ac}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  Ini. {combatant.initiative}
+                                </Badge>
+                              </div>
+                              
+                              {/* Condições */}
+                              {combatant.conditions.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {combatant.conditions.map(condition => (
+                                    <Badge 
+                                      key={condition} 
+                                      variant="secondary" 
+                                      className="text-xs cursor-pointer hover:opacity-80"
+                                      onClick={() => removeCondition(combatant.id, condition)}
+                                    >
+                                      {condition}
+                                      <X className="w-3 h-3 ml-1" />
+                                    </Badge>
+                                  ))}
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => openStatusModal(combatant)}
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Status
+                                  </Button>
+                                </div>
+                              )}
+                              {combatant.conditions.length === 0 && (
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 px-2 text-xs mt-1"
+                                  onClick={() => openStatusModal(combatant)}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Adicionar Status
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Lado Direito: Controles de Vida */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            {/* Barra de Vida */}
+                            <div className="w-full sm:w-48">
+                              <div className="flex justify-between text-sm mb-1">
+                                <div className="flex items-center gap-1">
+                                  <Heart className="w-3 h-3" />
+                                  <span>PV</span>
+                                </div>
+                                <span className="font-medium">
+                                  {combatant.hpCurrent} / {combatant.hpMax}
+                                </span>
+                              </div>
+                              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full ${hpColor} transition-all duration-300`}
+                                  style={{ width: `${hpPercentage}%` }}
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Controles de HP com INPUT */}
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-8 w-8"
+                                  onClick={() => {
+                                    const damage = parseInt(prompt(`Dano em ${combatant.name}:`) || "0");
+                                    if (!isNaN(damage)) updateHP(combatant.id, -damage);
+                                  }}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </Button>
+                                
+                                <div className="relative">
+                                  <Input
+                                    type="number"
+                                    value={combatant.hpCurrent}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value) || 0;
+                                      updateHPByValue(combatant.id, value);
+                                    }}
+                                    className="w-16 h-8 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    min={0}
+                                    max={combatant.hpMax}
+                                  />
+                                  <div className="absolute -bottom-5 left-0 right-0 text-xs text-center text-muted-foreground">
+                                    de {combatant.hpMax}
+                                  </div>
+                                </div>
+                                
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-8 w-8"
+                                  onClick={() => {
+                                    const healing = parseInt(prompt(`Cura em ${combatant.name}:`) || "0");
+                                    if (!isNaN(healing)) updateHP(combatant.id, healing);
+                                  }}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleManualDamage(combatant.id)}
+                                className="text-xs"
+                              >
+                                ± PV
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
+            {/* Rolagem Rápida e Acesso Rápido */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Rolagem Rápida */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Dices className="w-5 h-5" />
+                    Rolagem Rápida
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {['1d4', '1d6', '1d8', '1d10', '1d12', '1d20', '2d6', '3d6', '1d100'].map((dice) => (
                       <Button
                         key={dice}
                         onClick={() => rollDice(dice)}
                         variant="outline"
-                        className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 min-w-[60px] text-sm py-2 h-auto"
-                        size="sm"
+                        className="h-12"
                       >
-                        {label}
+                        {dice}
                       </Button>
                     ))}
                   </div>
-
-                  {/* Resultado - agora em linha em telas maiores */}
-                  <div className="flex items-center justify-center sm:justify-start gap-3">
-                    <div className="text-center sm:text-left">
+                  {lastRoll && (
+                    <div className="text-center p-3 bg-primary/5 rounded-lg">
                       <div className="text-sm text-muted-foreground">Última rolagem</div>
-                      {lastRoll ? (
-                        <div className="flex items-center gap-2 justify-center sm:justify-start">
-                          <span className="text-xs text-muted-foreground">{lastRoll.dice}</span>
-                          <span className="text-xl font-bold text-primary">{lastRoll.result}</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">--</span>
-                      )}
+                      <div className="text-2xl font-bold">{lastRoll.dice}: {lastRoll.result}</div>
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Acesso Rápido */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Acesso Rápido
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      variant="outline"
+                      className="h-16 flex-col gap-1"
+                      onClick={() => navigate('/npcs')}
+                    >
+                      <Users className="w-5 h-5" />
+                      <span className="text-sm">NPCs</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-16 flex-col gap-1"
+                      onClick={() => navigate('/history')}
+                    >
+                      <Scroll className="w-5 h-5" />
+                      <span className="text-sm">História</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-16 flex-col gap-1"
+                      onClick={() => navigate('/map')}
+                    >
+                      <MapPin className="w-5 h-5" />
+                      <span className="text-sm">Mapas</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-16 flex-col gap-1"
+                      onClick={() => navigate('/rules')}
+                    >
+                      <Book className="w-5 h-5" />
+                      <span className="text-sm">Regras</span>
+                    </Button>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Party */}
+          <TabsContent value="party">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Status da Party
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {playerCharacters.map((pc) => {
+                    const hpPercentage = (pc.hpCurrent / pc.hpMax) * 100;
+                    const hpColor = 
+                      hpPercentage > 75 ? "bg-green-500" :
+                      hpPercentage > 50 ? "bg-yellow-500" :
+                      hpPercentage > 25 ? "bg-orange-500" : "bg-red-500";
+                    
+                    return (
+                      <Card key={pc.id} className="relative">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-bold text-lg">{pc.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {pc.class} Nv.{pc.level}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="gap-1">
+                              <Shield className="w-3 h-3" />
+                              CA {pc.ac}
+                            </Badge>
+                          </div>
+                          
+                          {/* Barra de HP */}
+                          <div className="mt-4">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="flex items-center gap-1">
+                                <Heart className="w-3 h-3 text-destructive" />
+                                Pontos de Vida
+                              </span>
+                              <span>{pc.hpCurrent}/{pc.hpMax}</span>
+                            </div>
+                            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full ${hpColor} transition-all`}
+                                style={{ width: `${hpPercentage}%` }}
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Condições */}
+                          {pc.conditions.length > 0 && (
+                            <div className="mt-3">
+                              <div className="text-xs text-muted-foreground mb-1">Condições:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {pc.conditions.map(cond => (
+                                  <Badge key={cond} variant="secondary" className="text-xs">
+                                    {cond}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-4"
+                            onClick={() => navigate(`/character/${pc.id}`)}
+                          >
+                            Ver Ficha Completa
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </TabsContent>
 
-          {/* Coluna lateral com anotações */}
-          <div className="xl:col-span-1">
-            <Card className="card-pergaminho h-full">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                  <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                    Anotações
-                  </span>
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Suas anotações pessoais para a campanha
+          {/* Tab: Anotações */}
+          <TabsContent value="notes">
+            <Card>
+              <CardHeader>
+                <CardTitle>Anotações da Campanha</CardTitle>
+                <CardDescription>
+                  Ideias, plot points e informações importantes
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
+              <CardContent>
                 <Textarea
                   value={campaignNotes}
                   onChange={(e) => setCampaignNotes(e.target.value)}
-                  placeholder="Digite suas anotações, ideias, plot points, ou qualquer informação importante da campanha..."
-                  className="min-h-[250px] sm:min-h-[300px] resize-none border-2 border-border focus:border-primary/50 transition-colors text-sm sm:text-base bg-background/50"
+                  placeholder="Digite suas anotações aqui..."
+                  className="min-h-[400px]"
                 />
-                <Button
-                  onClick={saveCampaignNotes}
-                  disabled={savingNotes}
-                  variant="outline"
-                  className="bg-primary/10 hover:bg-primary/20 border-2 border-border hover:border-primary/50 transition-all duration-200 whitespace-nowrap w-full mt-4"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {savingNotes ? "Salvando..." : "Salvar Anotações"}
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Suas anotações são salvas automaticamente no nosso banco de dados
-                </p>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={() => setCampaignNotes("")}>
+                    Limpar
+                  </Button>
+                  <Button onClick={saveCampaignNotes} disabled={savingNotes} className="gap-2">
+                    <Save className="w-4 h-4" />
+                    {savingNotes ? "Salvando..." : "Salvar Anotações"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Modal de Status - IGUAL AO DA TELA INITIATIVE */}
+      <Dialog open={showStatusModal} onOpenChange={setShowStatusModal}>
+        <DialogContent className="max-w-md bg-card/95 backdrop-blur-sm">
+          <DialogHeader>
+            <DialogTitle>
+              Adicionar Status - {currentCombatantForStatus?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Selecione um status para aplicar
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar status..."
+                value={statusSearch}
+                onChange={(e) => setStatusSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            
+            {/* Lista de Status */}
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {filteredStatusTypes.map((status) => (
+                <div
+                  key={status.id}
+                  className="p-3 border border-border/50 rounded-lg hover:bg-primary/5 
+                           hover:border-primary/50 cursor-pointer transition-all duration-200
+                           bg-card/50"
+                  onClick={() => currentCombatantForStatus && addCondition(currentCombatantForStatus.id, status.name)}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: status.color }}
+                    />
+                    <span className="font-medium text-foreground">{status.name}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {status.description}
+                  </p>
+                </div>
+              ))}
+              
+              {filteredStatusTypes.length === 0 && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground">
+                    {statusSearch ? 'Nenhum status encontrado' : 'Nenhum status cadastrado'}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Consulta de Status Detalhada */}
+            {selectedStatus && (
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: selectedStatus.color }}
+                  />
+                  <h3 className="font-bold text-lg text-foreground">{selectedStatus.name}</h3>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  <p className="text-sm text-foreground/80">{selectedStatus.description}</p>
+                </div>
+                
+                <Button
+                  onClick={() => setSelectedStatus(null)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Voltar para a lista
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

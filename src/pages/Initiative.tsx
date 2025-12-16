@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Dices, Plus, Trash2, Heart, Shield, Search, ArrowLeft, X, Play, RotateCcw, Clock, SkipForward, MapPin,Book,Swords,User,Users, BookOpen,Zap,ChevronRight } from "lucide-react";
+import { Dices, Plus, Minus, Trash2, Heart, Shield, Search, ArrowLeft, X, Play, RotateCcw, Clock, SkipForward, MapPin,Book,Swords,User,Users, BookOpen,Zap,ChevronRight } from "lucide-react";
 
 interface InitiativeCharacter {
   id: string;
@@ -116,6 +116,16 @@ const Initiative = () => {
     duration: 0,
     notes: "",
   });
+
+  const updateHP = (id: string, amount: number) => {
+    setCombatants(prev => prev.map(combatant => {
+      if (combatant.id === id) {
+        const newHP = Math.max(0, Math.min(combatant.hpMax, combatant.hpCurrent + amount));
+        return { ...combatant, hpCurrent: newHP };
+      }
+      return combatant;
+    }));
+  };
 
   // Filtragem dos status
   const filteredStatusTypes = statusTypes.filter(status =>
@@ -603,16 +613,28 @@ const Initiative = () => {
 
   const handleUpdateHP = async (characterId: string, newHP: number) => {
     try {
+      // Atualiza localmente primeiro para resposta imediata
+      setCharacters(prev => prev.map(char => 
+        char.id === characterId 
+          ? { ...char, current_hp: newHP }
+          : char
+      ));
+      
+      // Atualiza no banco de forma assíncrona
       const { error } = await supabase
         .from("initiative_entries")
         .update({ current_hp: newHP })
         .eq("id", characterId);
-
+  
       if (error) throw error;
-
-      fetchCharacters();
+      
+      // Não precisa chamar fetchCharacters() pois já atualizamos localmente
+      
     } catch (error: any) {
+      console.error("Erro ao atualizar HP:", error);
       toast.error("Erro ao atualizar HP");
+      // Reverte a mudança local em caso de erro
+      fetchCharacters();
     }
   };
 
@@ -820,221 +842,272 @@ const Initiative = () => {
   
           {/* Lista de Personagens */}
           <div className="space-y-4">
-            {characters.map((character, index) => (
-              <div
-                key={character.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, character.id)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, character.id)}
-                className={`cursor-move transition-all duration-200 hover:scale-[1.02] ${
-                  combatStarted && currentTurn === index + 1 
-                    ? 'ring-2 ring-primary ring-opacity-50 rounded-lg' 
-                    : ''
-                }`}
-              >
-                <Card className={`border-2 border-border bg-card/80 hover:bg-card transition-all duration-300
-                               hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)] ${
-                  combatStarted && currentTurn === index + 1 
-                    ? 'border-primary shadow-lg' 
-                    : 'hover:border-primary/50'
+  {characters.map((character, index) => {
+    // Cálculos da barra de HP
+    const hpPercentage = character.max_hp > 0 
+      ? (character.current_hp / character.max_hp) * 100 
+      : 0;
+    
+    const hpColor = 
+      hpPercentage > 75 ? "bg-green-500" :
+      hpPercentage > 50 ? "bg-yellow-500" :
+      hpPercentage > 25 ? "bg-orange-500" : "bg-red-500";
+    
+    return (
+      <div
+        key={character.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, character.id)}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, character.id)}
+        className={`cursor-move transition-all duration-200 hover:scale-[1.02] ${
+          combatStarted && currentTurn === index + 1 
+            ? 'ring-2 ring-primary ring-opacity-50 rounded-lg' 
+            : ''
+        }`}
+      >
+        <Card className={`border-2 border-border bg-card/80 hover:bg-card transition-all duration-300
+                       hover:shadow-[0_4px_20px_hsl(var(--primary)_/_0.1)] ${
+          combatStarted && currentTurn === index + 1 
+            ? 'border-primary shadow-lg' 
+            : 'hover:border-primary/50'
+        }`}>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                  combatStarted && currentTurn === index + 1
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-primary/10 border-primary/30'
                 }`}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
-                          combatStarted && currentTurn === index + 1
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-primary/10 border-primary/30'
-                        }`}>
-                          <span className="font-bold text-lg">{index + 1}</span>
-                        </div>
-  
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h3 className="font-bold text-lg truncate">{character.name}</h3>
-                            <Badge 
-                              variant="outline" 
-                              className={character.character_type === 'player' 
-                                ? "bg-green-500/20 text-green-600 border-green-500" 
-                                : "bg-purple-500/20 text-purple-600 border-purple-500"
-                              }
-                            >
-                              {character.character_type === 'player' ? 'Jogador' : 'NPC'}
-                            </Badge>
-                            {combatStarted && currentTurn === index + 1 && (
-                              <Badge className="bg-primary text-primary-foreground animate-pulse">
-                                TURNO ATUAL
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Iniciativa: {character.initiative_value}
-                          </p>
-                        </div>
-                      </div>
-  
-                      <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                        <div className="flex items-center gap-2">
-                          <Heart className="w-5 h-5 text-red-500" />
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              value={character.current_hp}
-                              onChange={(e) => handleUpdateHP(character.id, parseInt(e.target.value) || 0)}
-                              className="w-16 h-8 text-center"
-                            />
-                            <span className="text-muted-foreground">/</span>
-                            <span className="w-10">{character.max_hp}</span>
-                          </div>
-                        </div>
-  
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-5 h-5 text-blue-500" />
-                          <span className="font-medium">{character.armor_class}</span>
-                        </div>
-  
-                        <div className="flex items-center gap-2">
-                          <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedCharacter(character)}
-                                className="h-8 border-border hover:border-primary/50"
-                              >
-                                <Plus className="w-4 h-4 mr-1" />
-                                Status
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
-                                                    shadow-[var(--shadow-glow)] max-w-md">
-                              <DialogHeader>
-                                <DialogTitle className="text-xl">
-                                  Adicionar Status
-                                </DialogTitle>
-                                <DialogDescription>
-                                  Adicione um status a {selectedCharacter?.name}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <form onSubmit={handleAddStatus} className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="status_type" className="text-foreground/90">Tipo de Status</Label>
-                                  <select
-                                    id="status_type"
-                                    value={statusFormData.status_type_id}
-                                    onChange={(e) => setStatusFormData({ ...statusFormData, status_type_id: e.target.value })}
-                                    className="w-full p-2 border border-border/50 rounded-md bg-card 
-                                             focus:border-primary focus:outline-none"
-                                    required
-                                  >
-                                    <option value="">Selecione um status</option>
-                                    {statusTypes.map((status) => (
-                                      <option key={status.id} value={status.id}>
-                                        {status.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                                               
-                                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent 
-                                                               hover:from-primary/90 hover:to-accent/90
-                                                               border border-primary/30 shadow-lg">
-                                  Adicionar Status
-                                </Button>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
-  
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => handleDelete(character.id)}
-                            className="h-8 w-8"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-  
-                    {character.statuses.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {character.statuses.map((status) => (
-                          <Badge
-                            key={status.id}
-                            className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
-                            style={{ 
-                              backgroundColor: status.status_type.color + '20',
-                              borderColor: status.status_type.color,
-                              color: status.status_type.color
-                            }}
-                            onClick={() => {
-                              // Criar um objeto StatusType a partir dos dados do status
-                              const statusType: StatusType = {
-                                id: status.status_type.name, // Usar name como ID temporário
-                                name: status.status_type.name,
-                                color: status.status_type.color,
-                                description: status.status_type.description
-                              };
-                              handleConsultStatus(statusType);
-                            }}
-                          >
-                            <div 
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: status.status_type.color }}
-                            />
-                            {status.status_type.name}
-                            {status.duration && ` (${status.duration})`}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveStatus(status.id);
-                              }}
-                              className="ml-1 hover:bg-black/50 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
+                  <span className="font-bold text-lg">{index + 1}</span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="font-bold text-lg truncate">{character.name}</h3>
+                    <Badge 
+                      variant="outline" 
+                      className={character.character_type === 'player' 
+                        ? "bg-green-500/20 text-green-600 border-green-500" 
+                        : "bg-purple-500/20 text-purple-600 border-purple-500"
+                      }
+                    >
+                      {character.character_type === 'player' ? 'Jogador' : 'NPC'}
+                    </Badge>
+                    {combatStarted && currentTurn === index + 1 && (
+                      <Badge className="bg-primary text-primary-foreground animate-pulse">
+                        TURNO ATUAL
+                      </Badge>
                     )}
-  
-                    {character.notes && (
-                      <div className="mt-3 p-3 rounded-lg bg-card/50 border border-border/50">
-                        <p className="text-sm text-foreground/80">
-                          <span className="font-medium text-foreground">Notas:</span> {character.notes}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Iniciativa: {character.initiative_value}
+                  </p>
+                </div>
               </div>
-            ))}
-  
-            {characters.length === 0 && (
-              <Card className="border-2 border-dashed border-border/50 bg-card/50">
-                <CardContent className="py-12 text-center">
-                  <Swords className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="text-muted-foreground mb-4">Nenhum personagem na iniciativa</p>
-                  <Dialog open={dialogOpen} onOpenChange={(open) => {
-                    setDialogOpen(open);
-                    if (!open) resetForm();
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline"
-                        className="border-primary/30 hover:border-primary/50"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Personagem
-                      </Button>
-                    </DialogTrigger>
-                  </Dialog>
-                </CardContent>
-              </Card>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                {/* CA e Ações - Coluna 2 */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-blue-500" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground">CA</span>
+                      <span className="font-medium text-lg">{character.armor_class}</span>
+                    </div>
+                  </div>
+
+                {/* Barra de HP - Coluna 1 */}
+                <div className="w-full sm:w-48">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Heart className="w-3 h-3 text-destructive" />
+                      PV
+                    </span>
+                    <span className="font-medium">{character.current_hp}/{character.max_hp}</span>
+                  </div>
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${hpColor} transition-all duration-300`}
+                      style={{ width: `${Math.max(0, Math.min(100, hpPercentage))}%` }}
+                    />
+                  </div>
+                </div>
+
+                  {/* Controle de HP - Em linha */}
+                  <div className="flex items-center gap-2">
+                  <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        const newHP = Math.max(0, character.current_hp - 1);
+                        handleUpdateHP(character.id, newHP);
+                      }}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        const newHP = Math.min(character.max_hp, character.current_hp + 1);
+                        handleUpdateHP(character.id, newHP);
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    
+                  </div>
+                  
+
+                  {/* Botões de Ação */}
+                  <div className="flex items-center gap-2">
+                    <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedCharacter(character)}
+                          className="h-8 border-border hover:border-primary/50"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Status
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-card/95 backdrop-blur-sm border-2 border-primary/30 
+                                              shadow-[var(--shadow-glow)] max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl">
+                            Adicionar Status
+                          </DialogTitle>
+                          <DialogDescription>
+                            Adicione um status a {selectedCharacter?.name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleAddStatus} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="status_type" className="text-foreground/90">Tipo de Status</Label>
+                            <select
+                              id="status_type"
+                              value={statusFormData.status_type_id}
+                              onChange={(e) => setStatusFormData({ ...statusFormData, status_type_id: e.target.value })}
+                              className="w-full p-2 border border-border/50 rounded-md bg-card 
+                                       focus:border-primary focus:outline-none"
+                              required
+                            >
+                              <option value="">Selecione um status</option>
+                              {statusTypes.map((status) => (
+                                <option key={status.id} value={status.id}>
+                                  {status.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                                                        
+                          <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent 
+                                                         hover:from-primary/90 hover:to-accent/90
+                                                         border border-primary/30 shadow-lg">
+                            Adicionar Status
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDelete(character.id)}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {character.statuses.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {character.statuses.map((status) => (
+                  <Badge
+                    key={status.id}
+                    className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ 
+                      backgroundColor: status.status_type.color + '20',
+                      borderColor: status.status_type.color,
+                      color: status.status_type.color
+                    }}
+                    onClick={() => {
+                      // Criar um objeto StatusType a partir dos dados do status
+                      const statusType: StatusType = {
+                        id: status.status_type.name, // Usar name como ID temporário
+                        name: status.status_type.name,
+                        color: status.status_type.color,
+                        description: status.status_type.description
+                      };
+                      handleConsultStatus(statusType);
+                    }}
+                  >
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: status.status_type.color }}
+                    />
+                    {status.status_type.name}
+                    {status.duration && ` (${status.duration})`}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveStatus(status.id);
+                      }}
+                      className="ml-1 hover:bg-black/50 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             )}
-          </div>
+
+            {character.notes && (
+              <div className="mt-3 p-3 rounded-lg bg-card/50 border border-border/50">
+                <p className="text-sm text-foreground/80">
+                  <span className="font-medium text-foreground">Notas:</span> {character.notes}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  })}
+
+  {characters.length === 0 && (
+    <Card className="border-2 border-dashed border-border/50 bg-card/50">
+      <CardContent className="py-12 text-center">
+        <Swords className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+        <p className="text-muted-foreground mb-4">Nenhum personagem na iniciativa</p>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) resetForm();
+        }}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline"
+              className="border-primary/30 hover:border-primary/50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Personagem
+            </Button>
+          </DialogTrigger>
+        </Dialog>
+      </CardContent>
+    </Card>
+  )}
+</div>
   
          
         </div>
@@ -1332,16 +1405,6 @@ const Initiative = () => {
                       </div>
                     )}
   
-                    {(formData.character_type === 'manual' || !formData.source_character_id) && (
-                      <>
-                      
-                        
-                        
-                          
-                        
-                        
-                      </>
-                    )}
   
                     <div className="space-y-2">
                       <Label htmlFor="initiative_value" className="text-foreground/90">Iniciativa *</Label>
